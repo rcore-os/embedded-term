@@ -1,0 +1,16 @@
+[package]
+name = "rcore-console"
+version = "0.1.0"
+authors = ["Runji Wang <wangrunji0408@163.com>"]
+edition = "2018"
+description = "Embedded virtual console in rCore kernel: receive text input and print to a framebuffer."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+embedded-graphics = "0.6.0-alpha.1"
+heapless = "0.5"
+
+[dev-dependencies]
+embedded-graphics-simulator = "0.2.0-alpha.1"
+ncurses = "5.99"
