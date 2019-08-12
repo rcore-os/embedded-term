@@ -2,12 +2,14 @@ use crate::text_buffer::{ConsoleChar, TextBuffer};
 use alloc::collections::VecDeque;
 use alloc::vec::Vec;
 
+/// Cache layer for [`TextBuffer`]
 pub struct TextBufferCache<T: TextBuffer> {
     buf: VecDeque<Vec<ConsoleChar>>,
     inner: T,
 }
 
 impl<T: TextBuffer> TextBufferCache<T> {
+    /// Create a cache layer for `inner` text buffer
     pub fn new(inner: T) -> Self {
         TextBufferCache {
             buf: VecDeque::from(vec![
@@ -17,6 +19,7 @@ impl<T: TextBuffer> TextBufferCache<T> {
             inner,
         }
     }
+    /// Write cache to inner buffer
     fn flush(&mut self) {
         for i in 0..self.height() {
             for j in 0..self.width() {

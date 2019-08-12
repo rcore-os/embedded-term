@@ -1,7 +1,5 @@
-use embedded_graphics::{fonts::Font8x16, pixelcolor::Rgb888, prelude::*, text_8x16};
 use embedded_graphics_simulator::{DisplayBuilder, RgbDisplay};
-use rcore_console::console::Console;
-use rcore_console::graphic::TextOnGraphic;
+use rcore_console::{Console, Rgb888, Drawing, Pixel};
 use std::cell::RefCell;
 
 fn main() {

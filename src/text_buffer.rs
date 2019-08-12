@@ -1,5 +1,6 @@
 use crate::escape_parser::CharacterAttribute;
 
+/// A character with attribute on screen
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(align(4))]
 pub struct ConsoleChar {
@@ -7,6 +8,7 @@ pub struct ConsoleChar {
     pub attr: CharacterAttribute,
 }
 
+/// Empty char
 impl Default for ConsoleChar {
     fn default() -> Self {
         ConsoleChar {
@@ -16,10 +18,20 @@ impl Default for ConsoleChar {
     }
 }
 
+/// A 2D array of [`ConsoleChar`] to render on screen
 pub trait TextBuffer {
+    /// Columns
     fn width(&self) -> usize;
+
+    /// Rows
     fn height(&self) -> usize;
+
+    /// Read the character at `(row, col)`
+    ///
+    /// Avoid use this because it's usually very slow on real hardware.
     fn read(&self, row: usize, col: usize) -> ConsoleChar;
+
+    /// Write a character `ch` at `(row, col)`
     fn write(&mut self, row: usize, col: usize, ch: ConsoleChar);
 
     /// Delete one character at `(row, col)`.
@@ -28,6 +40,9 @@ pub trait TextBuffer {
     }
 
     /// Insert one blank line at the bottom, and scroll up one line.
+    ///
+    /// The default method does single read and write for each pixel.
+    /// Usually it needs rewrite for better performance.
     fn new_line(&mut self) {
         for i in 1..self.height() {
             for j in 0..self.width() {

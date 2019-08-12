@@ -6,10 +6,10 @@ use crate::text_buffer_cache::TextBufferCache;
 use core::fmt;
 use embedded_graphics::prelude::Drawing;
 
-/// Console structure
+/// Console
 ///
-/// Input string with control sequence
-/// Output to a `TextBuffer`
+/// Input string with control sequence,
+/// output to a [`TextBuffer`].
 pub struct Console<T: TextBuffer> {
     /// cursor row
     row: usize,
@@ -23,19 +23,22 @@ pub struct Console<T: TextBuffer> {
 
 pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
 
-impl<D: Drawing<Rgb888>> ConsoleOnGraphic<D> {
+impl<D: Drawing<Rgb888>> Console<TextBufferCache<TextOnGraphic<D>>> {
+    /// Create a console on top of a frame buffer
     pub fn on_frame_buffer(width: u32, height: u32, buffer: D) -> Self {
         Self::on_cached_text_buffer(TextOnGraphic::new(width, height, buffer))
     }
 }
 
 impl<T: TextBuffer> Console<TextBufferCache<T>> {
+    /// Create a console on top of a [`TextBuffer`] with a cache layer
     pub fn on_cached_text_buffer(buffer: T) -> Self {
         Self::on_text_buffer(TextBufferCache::new(buffer))
     }
 }
 
 impl<T: TextBuffer> Console<T> {
+    /// Create a console on top of a [`TextBuffer`]
     pub fn on_text_buffer(buffer: T) -> Self {
         Console {
             row: 0,
@@ -61,6 +64,7 @@ impl<T: TextBuffer> Console<T> {
         }
     }
 
+    /// Write a single `byte` to console
     pub fn write_byte(&mut self, byte: u8) {
         if self.parser.is_parsing() {
             self.parser.parse(byte);
@@ -101,6 +105,7 @@ impl<T: TextBuffer> Console<T> {
         }
     }
 
+    /// Clear the screen
     pub fn clear(&mut self) {
         self.row = 0;
         self.col = 0;

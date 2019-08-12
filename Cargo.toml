@@ -1,9 +1,12 @@
 [package]
 name = "rcore-console"
 version = "0.1.0"
-authors = ["Runji Wang <wangrunji0408@163.com>"]
+authors = [
+    "Runji Wang <wangrunji0408@163.com>",
+    "equation314 <equation618@gmail.com>"
+]
 edition = "2018"
-description = "Embedded virtual console in rCore kernel: receive text input and print to a framebuffer."
+description = "The virtual console embedded in rCore kernel: receive text input and print to a framebuffer."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

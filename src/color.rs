@@ -1,6 +1,8 @@
 pub use embedded_graphics::pixelcolor::Rgb888;
 
-#[allow(dead_code)]
+/// 4-bit RGBI color palette
+///
+/// Reference: [https://en.wikipedia.org/wiki/List_of_monochrome_and_RGB_palettes#4-bit_RGBI]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ConsoleColor {
     Black,
@@ -22,6 +24,9 @@ pub enum ConsoleColor {
 }
 
 impl ConsoleColor {
+    /// Convert to ANSI escape code
+    ///
+    /// Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code#Colors]
     pub fn to_console_code(&self) -> u8 {
         use self::ConsoleColor::*;
         match self {
@@ -43,6 +48,7 @@ impl ConsoleColor {
             BrightWhite => 97,
         }
     }
+    /// Convert from ANSI escape code
     pub fn from_console_code(code: u8) -> Option<ConsoleColor> {
         use self::ConsoleColor::*;
         match code {
@@ -65,15 +71,11 @@ impl ConsoleColor {
             _ => None,
         }
     }
-}
-
-impl From<ConsoleColor> for Rgb888 {
-    /// Convert `ConsoleColor` to `Rgb888`.
-    /// use `CMD` color scheme.
-    /// (ref: https://en.wikipedia.org/wiki/ANSI_escape_code)
-    fn from(color: ConsoleColor) -> Self {
+    /// Convert to `Rgb888` in `CMD` color scheme.
+    /// Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code#Colors]
+    pub fn to_rgb888_cmd(&self) -> Rgb888 {
         use self::ConsoleColor::*;
-        match color {
+        match self {
             Black => Rgb888::new(0, 0, 0),
             Red => Rgb888::new(128, 0, 0),
             Green => Rgb888::new(0, 128, 8),

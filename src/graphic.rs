@@ -1,7 +1,12 @@
 use crate::text_buffer::*;
 use embedded_graphics::{fonts::Font8x16, pixelcolor::Rgb888, prelude::*, primitives::Line};
 
-/// A `TextBuffer` implementation on the top of `embedded_graphics::Drawing` trait
+/// A [`TextBuffer`] on top of a frame buffer
+///
+/// The internal use [`embedded_graphics`] crate to render fonts to pixels.
+///
+/// The underlying frame buffer needs to implement `Drawing<Rgb888>` trait
+/// to draw pixels in RGB format.
 pub struct TextOnGraphic<D>
 where
     D: Drawing<Rgb888>,
@@ -41,8 +46,8 @@ where
         let chs = [ch.ascii_char];
         let s = core::str::from_utf8(&chs).unwrap();
         let mut style = Style {
-            fill_color: Some(Rgb888::from(ch.attr.background)),
-            stroke_color: Some(Rgb888::from(ch.attr.foreground)),
+            fill_color: Some(ch.attr.background.to_rgb888_cmd()),
+            stroke_color: Some(ch.attr.foreground.to_rgb888_cmd()),
             stroke_width: 1,
         };
         if ch.attr.reverse {

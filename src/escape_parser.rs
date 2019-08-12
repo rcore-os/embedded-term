@@ -1,5 +1,8 @@
 //! ANSI escape sequences parser
-//! (ref: https://en.wikipedia.org/wiki/ANSI_escape_code)
+//!
+//! TODO: use other crate like [vte](https://docs.rs/vte/)
+//!
+//! Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code](https://en.wikipedia.org/wiki/ANSI_escape_code)
 
 #![allow(dead_code)]
 
@@ -18,7 +21,7 @@ pub struct CharacterAttribute {
     pub underline: bool,
     /// swap foreground and background colors
     pub reverse: bool,
-    /// text marked cfor deletion
+    /// text marked for deletion
     pub strikethrough: bool,
 }
 
