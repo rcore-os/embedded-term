@@ -35,12 +35,11 @@ where
         self.height as usize / 16
     }
     fn read(&self, _row: usize, _col: usize) -> ConsoleChar {
-        ConsoleChar::default()
-        //        unimplemented!()
+        unimplemented!("reading char from graphic is unsupported")
     }
     fn write(&mut self, row: usize, col: usize, ch: ConsoleChar) {
         let chs = [ch.ascii_char];
-        let s = unsafe { core::str::from_utf8_unchecked(&chs) };
+        let s = core::str::from_utf8(&chs).unwrap();
         let mut style = Style {
             fill_color: Some(Rgb888::from(ch.attr.background)),
             stroke_color: Some(Rgb888::from(ch.attr.foreground)),

@@ -21,7 +21,6 @@ pub trait TextBuffer {
     fn height(&self) -> usize;
     fn read(&self, row: usize, col: usize) -> ConsoleChar;
     fn write(&mut self, row: usize, col: usize, ch: ConsoleChar);
-    //    fn flush(&mut self);
 
     /// Delete one character at `(row, col)`.
     fn delete(&mut self, row: usize, col: usize) {

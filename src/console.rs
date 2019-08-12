@@ -1,6 +1,10 @@
+use crate::color::Rgb888;
 use crate::escape_parser::EscapeParser;
+use crate::graphic::TextOnGraphic;
 use crate::text_buffer::*;
+use crate::text_buffer_cache::TextBufferCache;
 use core::fmt;
+use embedded_graphics::prelude::Drawing;
 
 /// Console structure
 ///
@@ -17,8 +21,22 @@ pub struct Console<T: TextBuffer> {
     buf: T,
 }
 
+pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
+
+impl<D: Drawing<Rgb888>> ConsoleOnGraphic<D> {
+    pub fn on_frame_buffer(width: u32, height: u32, buffer: D) -> Self {
+        Self::on_cached_text_buffer(TextOnGraphic::new(width, height, buffer))
+    }
+}
+
+impl<T: TextBuffer> Console<TextBufferCache<T>> {
+    pub fn on_cached_text_buffer(buffer: T) -> Self {
+        Self::on_text_buffer(TextBufferCache::new(buffer))
+    }
+}
+
 impl<T: TextBuffer> Console<T> {
-    pub fn new(buffer: T) -> Console<T> {
+    pub fn on_text_buffer(buffer: T) -> Self {
         Console {
             row: 0,
             col: 0,
