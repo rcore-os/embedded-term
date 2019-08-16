@@ -43,11 +43,11 @@ where
         unimplemented!("reading char from graphic is unsupported")
     }
     fn write(&mut self, row: usize, col: usize, ch: ConsoleChar) {
-        let chs = [ch.ascii_char];
-        let s = core::str::from_utf8(&chs).unwrap();
+        let mut utf8_buf = [0u8; 8];
+        let s = ch.char.encode_utf8(&mut utf8_buf);
         let mut style = Style {
-            fill_color: Some(ch.attr.background.to_rgb888_cmd()),
-            stroke_color: Some(ch.attr.foreground.to_rgb888_cmd()),
+            fill_color: Some(ch.attr.background),
+            stroke_color: Some(ch.attr.foreground),
             stroke_width: 1,
         };
         if ch.attr.reverse {

@@ -4,7 +4,7 @@ use crate::escape_parser::CharacterAttribute;
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(align(4))]
 pub struct ConsoleChar {
-    pub ascii_char: u8,
+    pub char: char,
     pub attr: CharacterAttribute,
 }
 
@@ -12,7 +12,7 @@ pub struct ConsoleChar {
 impl Default for ConsoleChar {
     fn default() -> Self {
         ConsoleChar {
-            ascii_char: b' ',
+            char: ' ',
             attr: CharacterAttribute::default(),
         }
     }

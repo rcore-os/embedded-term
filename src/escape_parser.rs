@@ -1,22 +1,19 @@
 //! ANSI escape sequences parser
 //!
-//! TODO: use other crate like [vte](https://docs.rs/vte/)
-//!
 //! Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code](https://en.wikipedia.org/wiki/ANSI_escape_code)
 
 #![allow(dead_code)]
 
 use super::color::ConsoleColor;
-use heapless::consts::U8;
-use heapless::Vec;
+use super::color::Rgb888;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(align(4))]
 pub struct CharacterAttribute {
     /// foreground color
-    pub foreground: ConsoleColor,
+    pub foreground: Rgb888,
     /// background color
-    pub background: ConsoleColor,
+    pub background: Rgb888,
     /// show underline
     pub underline: bool,
     /// swap foreground and background colors
@@ -28,8 +25,8 @@ pub struct CharacterAttribute {
 impl Default for CharacterAttribute {
     fn default() -> Self {
         CharacterAttribute {
-            foreground: ConsoleColor::White,
-            background: ConsoleColor::Black,
+            foreground: ConsoleColor::White.to_rgb888_cmd(),
+            background: ConsoleColor::Black.to_rgb888_cmd(),
             underline: false,
             reverse: false,
             strikethrough: false,
@@ -39,7 +36,8 @@ impl Default for CharacterAttribute {
 
 impl CharacterAttribute {
     /// Parse and apply SGR (Select Graphic Rendition) parameters.
-    fn apply_sgr(&mut self, code: u8) {
+    pub fn apply_sgr(&mut self, params: &[i64]) {
+        let code = *params.get(0).unwrap_or(&0) as u8;
         match code {
             0 => *self = CharacterAttribute::default(),
             4 => self.underline = true,
@@ -48,39 +46,38 @@ impl CharacterAttribute {
             24 => self.underline = false,
             27 => self.reverse = false,
             29 => self.strikethrough = false,
-            30..=37 | 90..=97 => self.foreground = ConsoleColor::from_console_code(code).unwrap(),
-            40..=47 | 100..=107 => {
-                self.background = ConsoleColor::from_console_code(code - 10).unwrap()
+            30..=37 | 90..=97 => {
+                self.foreground = ConsoleColor::from_console_code(code)
+                    .unwrap()
+                    .to_rgb888_cmd()
             }
-            _ => { /* unimplemented!() */ }
+            38 => self.foreground = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8),
+            39 => self.foreground = CharacterAttribute::default().foreground,
+            40..=47 | 100..=107 => {
+                self.background = ConsoleColor::from_console_code(code - 10)
+                    .unwrap()
+                    .to_rgb888_cmd();
+            }
+            48 => self.background = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8),
+            49 => self.background = CharacterAttribute::default().background,
+            _ => warn!("unknown SGR: {:?}", params),
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
-enum ParseStatus {
-    /// The last character is `ESC`, start parsing the escape sequence.
-    BeginEscapeSequence,
-
-    /// The character followed by `ESC` is `[`, start parsing the CSI (Control
-    /// Sequence Introducer) sequence. The CSI sequence format is like
-    /// `ESC [ n1 ; n2 ; ... m`.
-    ParsingCSI,
-
-    /// Display text Normally.
-    Text,
-}
-
+/// Control Sequence Introducer
+///
+/// Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences](https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences)
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum CSI {
+pub enum CSI<'a> {
     CursorMove(i8, i8),
     CursorMoveLine(i8),
-    SGR,
+    SGR(&'a [i64]),
     Unknown,
 }
 
-impl CSI {
-    fn new(final_byte: u8, params: &[u8]) -> CSI {
+impl<'a> CSI<'a> {
+    pub fn new(final_byte: u8, params: &'a [i64]) -> CSI {
         let n = *params.get(0).unwrap_or(&1) as i8;
         match final_byte {
             b'A' => CSI::CursorMove(-n, 0),
@@ -89,100 +86,8 @@ impl CSI {
             b'D' => CSI::CursorMove(0, -n),
             b'E' => CSI::CursorMoveLine(n),
             b'F' => CSI::CursorMoveLine(-n),
-            b'm' => CSI::SGR,
+            b'm' => CSI::SGR(params),
             _ => CSI::Unknown,
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct EscapeParser {
-    status: ParseStatus,
-    char_attr: CharacterAttribute,
-    current_param: Option<u8>,
-    params: Vec<u8, U8>,
-}
-
-impl EscapeParser {
-    pub fn new() -> EscapeParser {
-        EscapeParser {
-            status: ParseStatus::Text,
-            char_attr: CharacterAttribute::default(),
-            params: Vec::new(),
-            current_param: None,
-        }
-    }
-
-    pub fn is_parsing(&self) -> bool {
-        self.status != ParseStatus::Text
-    }
-
-    /// See an `ECS` character, start parsing escape sequence.
-    pub fn start_parse(&mut self) {
-        assert_eq!(self.status, ParseStatus::Text);
-        self.status = ParseStatus::BeginEscapeSequence;
-        self.current_param = None;
-    }
-
-    /// See a character during parsing.
-    /// Return `Some(csi)` if parse end, else `None`.
-    pub fn parse(&mut self, byte: u8) -> Option<CSI> {
-        assert_ne!(self.status, ParseStatus::Text);
-        match self.status {
-            ParseStatus::BeginEscapeSequence => match byte {
-                b'[' => {
-                    self.status = ParseStatus::ParsingCSI;
-                    self.current_param = None;
-                    self.params.clear();
-                    return None;
-                }
-                _ => { /* unimplemented!() */ }
-            },
-            ParseStatus::ParsingCSI => match byte {
-                b'0'..=b'9' => {
-                    let digit = (byte - b'0') as u32;
-                    let param = self.current_param.unwrap_or(0) as u32;
-                    let res = param * 10 + digit;
-                    self.current_param = if res <= 0xFF { Some(res as u8) } else { None };
-                    return None;
-                }
-                b';' => {
-                    let param = self.current_param.unwrap_or(0);
-                    self.params.push(param).unwrap();
-                    self.current_param = Some(0);
-                    return None;
-                }
-                // @A–Z[\]^_`a–z{|}~
-                0x40..=0x7E => {
-                    if let Some(param) = self.current_param {
-                        self.params.push(param).unwrap();
-                    }
-                    let csi = CSI::new(byte, &self.params);
-                    if csi == CSI::SGR {
-                        if self.params.is_empty() {
-                            self.char_attr.apply_sgr(0);
-                        } else {
-                            for &param in self.params.iter() {
-                                self.char_attr.apply_sgr(param);
-                            }
-                        }
-                    }
-                    self.status = ParseStatus::Text;
-                    self.current_param = None;
-                    self.params.clear();
-                    return Some(csi);
-                }
-                _ => {}
-            },
-            ParseStatus::Text => {}
-        }
-        self.status = ParseStatus::Text;
-        self.current_param = None;
-        self.params.clear();
-        None
-    }
-
-    pub fn char_attribute(&self) -> CharacterAttribute {
-        self.char_attr
     }
 }
