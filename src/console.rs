@@ -178,12 +178,15 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
                 self.row = dr as usize;
                 self.col = dc as usize;
             }
-            CSI::CursorMoveLine(dr) => {
+            CSI::CursorMoveRow(dr) => {
                 self.row = (self.row as i64 + dr) as usize;
                 self.col = 0;
             }
-            CSI::CursorMoveLineTo(dr) => {
+            CSI::CursorMoveRowTo(dr) => {
                 self.row = dr as usize;
+            }
+            CSI::CursorMoveColTo(dc) => {
+                self.col = dc as usize;
             }
             CSI::EnableAutoWrap => {
                 self.auto_wrap = true;

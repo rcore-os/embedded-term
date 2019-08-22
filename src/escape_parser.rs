@@ -115,8 +115,9 @@ impl CharacterAttribute {
 pub enum CSI<'a> {
     CursorMove(i64, i64),
     CursorMoveTo(i64, i64),
-    CursorMoveLine(i64),
-    CursorMoveLineTo(i64),
+    CursorMoveRow(i64),
+    CursorMoveRowTo(i64),
+    CursorMoveColTo(i64),
     SGR(&'a [i64]),
     EnableAltScreenBuffer,
     DisableAltScreenBuffer,
@@ -129,6 +130,11 @@ pub enum CSI<'a> {
     EraseDisplayBelow,
     EraseDisplayAbove,
     EraseDisplayAll,
+    EraseLineRight,
+    EraseLineLeft,
+    EraseLineAll,
+    EnableBracketedPasteMode,
+    DisableBracketedPasteMode,
     Unknown,
 }
 
@@ -140,8 +146,8 @@ impl<'a> CSI<'a> {
             b'B' => CSI::CursorMove(n, 0),
             b'C' => CSI::CursorMove(0, n),
             b'D' => CSI::CursorMove(0, -n),
-            b'E' => CSI::CursorMoveLine(n),
-            b'F' => CSI::CursorMoveLine(-n),
+            b'E' => CSI::CursorMoveRow(n),
+            b'F' => CSI::CursorMoveRow(-n),
             b'H' => CSI::CursorMoveTo(
                 *params.get(0).unwrap_or(&1) - 1,
                 *params.get(1).unwrap_or(&1) - 1,
@@ -152,18 +158,27 @@ impl<'a> CSI<'a> {
                 2 => CSI::EraseDisplayAll,
                 _ => CSI::Unknown,
             },
+            b'K' => match *params.get(1).unwrap_or(&0) {
+                0 => CSI::EraseLineRight,
+                1 => CSI::EraseLineLeft,
+                2 => CSI::EraseLineAll,
+                _ => CSI::Unknown,
+            },
+            b'G' => CSI::CursorMoveColTo(*params.get(1).unwrap_or(&1) - 1),
             b'm' => CSI::SGR(params),
-            b'd' => CSI::CursorMoveLineTo(n - 1),
+            b'd' => CSI::CursorMoveRowTo(n - 1),
             b'h' => match *params.get(0).unwrap_or(&0) {
                 7 => CSI::EnableAutoWrap,
                 25 => CSI::ShowCursor,
                 1049 => CSI::EnableAltScreenBuffer,
+                2004 => CSI::EnableBracketedPasteMode,
                 _ => CSI::Unknown,
             },
             b'l' => match *params.get(0).unwrap_or(&0) {
                 7 => CSI::DisableAutoWrap,
                 25 => CSI::HideCursor,
                 1049 => CSI::DisableAltScreenBuffer,
+                2004 => CSI::DisableBracketedPasteMode,
                 _ => CSI::Unknown,
             },
             b'r' => CSI::SetScrollingRegion(
