@@ -56,14 +56,22 @@ impl CharacterAttribute {
                     .unwrap()
                     .to_rgb888_cmd()
             }
-            38 => self.foreground = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8),
+            38 => if params[1] == 5 {
+                self.foreground = ConsoleColor::from_console_code(params[2] as u8 + 30).unwrap().to_rgb888_cmd()
+            } else {
+                self.foreground = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
+            },
             39 => self.foreground = CharacterAttribute::default().foreground,
             40..=47 | 100..=107 => {
                 self.background = ConsoleColor::from_console_code(code - 10)
                     .unwrap()
                     .to_rgb888_cmd();
             }
-            48 => self.background = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8),
+            48 => if params[1] == 5 {
+                self.background = ConsoleColor::from_console_code(params[2] as u8 + 30).unwrap().to_rgb888_cmd()
+            } else {
+                self.background = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
+            },
             49 => self.background = CharacterAttribute::default().background,
             _ => warn!("unknown SGR: {:?}", params),
         }

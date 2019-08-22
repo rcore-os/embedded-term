@@ -33,7 +33,7 @@ fn main() {
         display.borrow_mut().run_once();
 
         loop {
-            poll.poll(&mut events, Some(Duration::from_millis(100))).unwrap();
+            poll.poll(&mut events, Some(Duration::from_millis(10))).unwrap();
 
             let mut buffer = [0u8; 10240];
             let len = master.read(&mut buffer).unwrap();
@@ -45,9 +45,10 @@ fn main() {
             events.clear();
         }
     } else {
-        let mut args = args_os().peekable();
-        args.next();
-        Command::new(args.peek().unwrap())
+        let mut args = args_os();
+        args.next(); // skip myself
+        let name = args.next().unwrap();
+        Command::new(name)
             .args(args)
             .status()
             .expect("could not execute tty");
