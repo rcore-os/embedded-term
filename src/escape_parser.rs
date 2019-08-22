@@ -20,6 +20,8 @@ pub struct CharacterAttribute {
     pub reverse: bool,
     /// text marked for deletion
     pub strikethrough: bool,
+    /// bold font
+    pub bold: bool,
 }
 
 impl Default for CharacterAttribute {
@@ -30,6 +32,7 @@ impl Default for CharacterAttribute {
             underline: false,
             reverse: false,
             strikethrough: false,
+            bold: false,
         }
     }
 }
@@ -40,9 +43,11 @@ impl CharacterAttribute {
         let code = *params.get(0).unwrap_or(&0) as u8;
         match code {
             0 => *self = CharacterAttribute::default(),
+            1 => self.bold = true,
             4 => self.underline = true,
             7 => self.reverse = true,
             9 => self.strikethrough = true,
+            22 => self.bold = false,
             24 => self.underline = false,
             27 => self.reverse = false,
             29 => self.strikethrough = false,

@@ -48,7 +48,7 @@ where
         let mut style = Style {
             fill_color: Some(ch.attr.background),
             stroke_color: Some(ch.attr.foreground),
-            stroke_width: 1,
+            stroke_width: if ch.attr.bold { 5 } else { 1 },
         };
         if ch.attr.reverse {
             core::mem::swap(&mut style.fill_color, &mut style.stroke_color);

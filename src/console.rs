@@ -79,13 +79,6 @@ impl<T: TextBuffer> fmt::Write for Console<T> {
 
 impl<T: TextBuffer> ConsoleInner<T> {
     fn new_line(&mut self) {
-        let attr_blank = ConsoleChar {
-            char: ' ',
-            attr: self.attribute,
-        };
-        for j in self.col..self.buf.width() {
-            self.buf.write(self.row, j, attr_blank);
-        }
         self.col = 0;
         if self.row < self.buf.height() - 1 {
             self.row += 1;
@@ -147,16 +140,16 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
         }
     }
 
-    fn hook(&mut self, _params: &[i64], _intermediates: &[u8], _ignore: bool) {
-        unimplemented!()
+    fn hook(&mut self, params: &[i64], intermediates: &[u8], ignore: bool) {
+        debug!("hook: {:?}, {:?}, {}", params, intermediates, ignore);
     }
 
     fn put(&mut self, byte: u8) {
-        warn!("put: {}", byte);
+        debug!("put: {}", byte);
     }
 
     fn unhook(&mut self) {
-        unimplemented!()
+        debug!("unhook:");
     }
 
     fn osc_dispatch(&mut self, params: &[&[u8]]) {

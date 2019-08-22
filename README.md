@@ -4,10 +4,20 @@ The virtual console embedded in rCore kernel.
 
 ## Run example
 
-A rterm example is available:
+1. rterm
+
+Read and show stdin:
 
 ```
-cargo run --example rterm
+htop | cargo run --example rterm
+```
+
+2. pty
+
+Spawn a process and show:
+
+```
+cargo run --example pty htop
 ```
 
 TODO: documents and tests
