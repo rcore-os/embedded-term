@@ -70,15 +70,24 @@ impl CharacterAttribute {
 /// Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences](https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences)
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CSI<'a> {
-    CursorMove(i8, i8),
-    CursorMoveLine(i8),
+    CursorMove(i64, i64),
+    CursorMoveTo(i64, i64),
+    CursorMoveLine(i64),
+    CursorMoveLineTo(i64),
     SGR(&'a [i64]),
+    EnableAltScreenBuffer,
+    DisableAltScreenBuffer,
+    EnableAutoWrap,
+    DisableAutoWrap,
+    SetScrollingRegion(i64, i64),
+    WindowManipulation(&'a [i64]),
+    EraseDisplay,
     Unknown,
 }
 
 impl<'a> CSI<'a> {
-    pub fn new(final_byte: u8, params: &'a [i64]) -> CSI {
-        let n = *params.get(0).unwrap_or(&1) as i8;
+    pub fn new(final_byte: u8, params: &'a [i64], _intermediates: &'a [u8]) -> CSI<'a> {
+        let n = *params.get(0).unwrap_or(&1);
         match final_byte {
             b'A' => CSI::CursorMove(-n, 0),
             b'B' => CSI::CursorMove(n, 0),
@@ -86,7 +95,28 @@ impl<'a> CSI<'a> {
             b'D' => CSI::CursorMove(0, -n),
             b'E' => CSI::CursorMoveLine(n),
             b'F' => CSI::CursorMoveLine(-n),
+            b'H' => CSI::CursorMoveTo(
+                *params.get(0).unwrap_or(&1) - 1,
+                *params.get(1).unwrap_or(&1) - 1,
+            ),
+            b'J' => CSI::EraseDisplay, // TODO: Erase mode
             b'm' => CSI::SGR(params),
+            b'd' => CSI::CursorMoveLineTo(n - 1),
+            b'h' => match *params.get(0).unwrap_or(&0) {
+                7 => CSI::EnableAutoWrap,
+                1049 => CSI::EnableAltScreenBuffer,
+                _ => CSI::Unknown,
+            },
+            b'l' => match *params.get(0).unwrap_or(&0) {
+                7 => CSI::DisableAutoWrap,
+                1049 => CSI::DisableAltScreenBuffer,
+                _ => CSI::Unknown,
+            },
+            b'r' => CSI::SetScrollingRegion(
+                *params.get(0).unwrap_or(&1) - 1,
+                *params.get(1).unwrap_or(&1) - 1,
+            ),
+            b't' => CSI::WindowManipulation(params),
             _ => CSI::Unknown,
         }
     }

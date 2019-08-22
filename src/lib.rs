@@ -18,7 +18,7 @@ extern crate log;
 
 pub use color::*;
 pub use console::*;
-pub use embedded_graphics::{self, Drawing, prelude::Pixel};
+pub use embedded_graphics::{self, prelude::Pixel, Drawing};
 pub use graphic::*;
 pub use text_buffer::*;
 pub use text_buffer_cache::*;

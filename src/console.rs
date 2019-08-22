@@ -27,6 +27,8 @@ struct ConsoleInner<T: TextBuffer> {
     attribute: CharacterAttribute,
     /// character buffer
     buf: T,
+    /// auto wrap
+    auto_wrap: bool,
 }
 
 pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
@@ -55,6 +57,7 @@ impl<T: TextBuffer> Console<T> {
                 col: 0,
                 attribute: CharacterAttribute::default(),
                 buf: buffer,
+                auto_wrap: true,
             },
         }
     }
@@ -103,8 +106,12 @@ impl<T: TextBuffer> ConsoleInner<T> {
 /// Perform actions
 impl<T: TextBuffer> Perform for ConsoleInner<T> {
     fn print(&mut self, c: char) {
-        debug!("print: {}", c);
+        debug!("print: {:?}", c);
         if self.col >= self.buf.width() {
+            if !self.auto_wrap {
+                // skip this one
+                return;
+            }
             self.new_line();
         }
         let ch = ConsoleChar {
@@ -163,24 +170,44 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
         ignore: bool,
         final_byte: char,
     ) {
+        let parsed = CSI::new(final_byte as u8, params, intermediates);
         debug!(
-            "csi: {:?}, {:?}, {:?}, {}",
-            params, intermediates, ignore, final_byte
+            "csi: {:?}, {:?}, {:?}, {} as {:?}",
+            params, intermediates, ignore, final_byte, parsed
         );
-        match CSI::new(final_byte as u8, params) {
+        match parsed {
             CSI::SGR(code) => self.attribute.apply_sgr(code),
             CSI::CursorMove(dr, dc) => {
-                self.row = (self.row as i8 + dr) as usize;
-                self.col = (self.col as i8 + dc) as usize;
+                self.row = (self.row as i64 + dr) as usize;
+                self.col = (self.col as i64 + dc) as usize;
+            }
+            CSI::CursorMoveTo(dr, dc) => {
+                self.row = dr as usize;
+                self.col = dc as usize;
             }
             CSI::CursorMoveLine(dr) => {
-                self.row = (self.row as i8 + dr) as usize;
+                self.row = (self.row as i64 + dr) as usize;
                 self.col = 0;
             }
-            _ => warn!(
+            CSI::CursorMoveLineTo(dr) => {
+                self.row = dr as usize;
+            }
+            CSI::EnableAutoWrap => {
+                self.auto_wrap = true;
+            }
+            CSI::DisableAutoWrap => {
+                self.auto_wrap = false;
+            }
+            CSI::EraseDisplay => {
+                self.buf.clear();
+            }
+            CSI::Unknown => warn!(
                 "unknown CSI: {:?}, {:?}, {:?}, {}",
                 params, intermediates, ignore, final_byte
             ),
+            _ => {
+                // do nothing
+            }
         }
     }
 

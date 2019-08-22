@@ -1,17 +1,18 @@
 use embedded_graphics_simulator::{DisplayBuilder, RgbDisplay};
-use rcore_console::{Console, Rgb888, Drawing, Pixel};
+use rcore_console::{Console, Drawing, Pixel, Rgb888};
 use std::cell::RefCell;
 use std::io;
 use std::io::Read;
 
 fn main() {
     env_logger::init();
-    let (width, height) = (320, 200);
+    let (width, height) = (800, 600);
     let display = RefCell::new(DisplayBuilder::new().size(width, height).build_rgb());
 
     let mut console =
         Console::on_frame_buffer(width as u32, height as u32, DisplayWrapper(&display));
 
+    display.borrow_mut().run_once();
     for c in io::stdin().lock().bytes() {
         let c = c.unwrap();
         if c == 0xff {
