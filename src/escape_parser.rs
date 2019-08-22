@@ -124,7 +124,11 @@ pub enum CSI<'a> {
     DisableAutoWrap,
     SetScrollingRegion(i64, i64),
     WindowManipulation(&'a [i64]),
-    EraseDisplay,
+    HideCursor,
+    ShowCursor,
+    EraseDisplayBelow,
+    EraseDisplayAbove,
+    EraseDisplayAll,
     Unknown,
 }
 
@@ -142,16 +146,23 @@ impl<'a> CSI<'a> {
                 *params.get(0).unwrap_or(&1) - 1,
                 *params.get(1).unwrap_or(&1) - 1,
             ),
-            b'J' => CSI::EraseDisplay, // TODO: Erase mode
+            b'J' => match *params.get(1).unwrap_or(&0) {
+                0 => CSI::EraseDisplayBelow,
+                1 => CSI::EraseDisplayAbove,
+                2 => CSI::EraseDisplayAll,
+                _ => CSI::Unknown,
+            },
             b'm' => CSI::SGR(params),
             b'd' => CSI::CursorMoveLineTo(n - 1),
             b'h' => match *params.get(0).unwrap_or(&0) {
                 7 => CSI::EnableAutoWrap,
+                25 => CSI::ShowCursor,
                 1049 => CSI::EnableAltScreenBuffer,
                 _ => CSI::Unknown,
             },
             b'l' => match *params.get(0).unwrap_or(&0) {
                 7 => CSI::DisableAutoWrap,
+                25 => CSI::HideCursor,
                 1049 => CSI::DisableAltScreenBuffer,
                 _ => CSI::Unknown,
             },

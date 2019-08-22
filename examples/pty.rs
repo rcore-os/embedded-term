@@ -5,7 +5,9 @@ use pty::fork::*;
 use rcore_console::{Console, Drawing, Pixel, Rgb888};
 use std::cell::RefCell;
 use std::env::args_os;
+use std::io::stdin;
 use std::io::Read;
+use std::io::Write;
 use std::os::unix::io::AsRawFd;
 use std::process::Command;
 use std::time::Duration;
@@ -27,22 +29,40 @@ fn main() {
             Token(0),
             Ready::readable(),
             PollOpt::edge(),
-        ).unwrap();
+        )
+        .unwrap();
+        poll.register(
+            &EventedFd(&stdin().as_raw_fd()),
+            Token(1),
+            Ready::readable(),
+            PollOpt::edge(),
+        )
+        .unwrap();
         let mut events = Events::with_capacity(1024);
 
         display.borrow_mut().run_once();
 
         loop {
-            poll.poll(&mut events, Some(Duration::from_millis(10))).unwrap();
+            poll.poll(&mut events, Some(Duration::from_millis(10)))
+                .unwrap();
 
             let mut buffer = [0u8; 10240];
-            let len = master.read(&mut buffer).unwrap();
-            for c in &buffer[..len] {
-                console.write_byte(*c);
+            for event in events.iter() {
+                match event.token() {
+                    Token(0) => {
+                        let len = master.read(&mut buffer).unwrap();
+                        for c in &buffer[..len] {
+                            console.write_byte(*c);
+                        }
+                        display.borrow_mut().run_once();
+                    }
+                    Token(1) => {
+                        let len = stdin().read(&mut buffer).unwrap();
+                        master.write(&buffer[..len]).unwrap();
+                    }
+                    _ => unreachable!(),
+                }
             }
-            display.borrow_mut().run_once();
-
-            events.clear();
         }
     } else {
         let mut args = args_os();
@@ -51,7 +71,7 @@ fn main() {
         Command::new(name)
             .args(args)
             .status()
-            .expect("could not execute tty");
+            .expect("could not execute program");
     }
 }
 

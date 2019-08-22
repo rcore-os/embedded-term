@@ -191,8 +191,22 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
             CSI::DisableAutoWrap => {
                 self.auto_wrap = false;
             }
-            CSI::EraseDisplay => {
+            CSI::EraseDisplayAll => {
                 self.buf.clear();
+            }
+            CSI::EraseDisplayAbove => {
+                for i in 0..self.row {
+                    for j in 0..self.buf.width() {
+                        self.buf.delete(i, j);
+                    }
+                }
+            }
+            CSI::EraseDisplayBelow => {
+                for i in self.row..self.buf.height() {
+                    for j in 0..self.buf.width() {
+                        self.buf.delete(i, j);
+                    }
+                }
             }
             CSI::Unknown => warn!(
                 "unknown CSI: {:?}, {:?}, {:?}, {}",
@@ -205,9 +219,22 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
     }
 
     fn esc_dispatch(&mut self, params: &[i64], intermediates: &[u8], ignore: bool, byte: u8) {
-        warn!(
+        debug!(
             "esc: {:?}, {:?}, {:?}, {}",
             params, intermediates, ignore, byte
         );
+        match byte {
+            b'K' => {
+                for i in self.col..self.buf.height() {
+                    self.buf.delete(self.row, i);
+                }
+            }
+            _ => {
+                warn!(
+                    "unknown esc: {:?}, {:?}, {:?}, {}",
+                    params, intermediates, ignore, byte
+                );
+            }
+        }
     }
 }
