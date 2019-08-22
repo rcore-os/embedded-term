@@ -5,10 +5,12 @@ use pty::fork::*;
 use rcore_console::{Console, Drawing, Pixel, Rgb888};
 use std::cell::RefCell;
 use std::env::args_os;
+use std::fs::File;
 use std::io::stdin;
 use std::io::Read;
 use std::io::Write;
 use std::os::unix::io::AsRawFd;
+use std::os::unix::io::FromRawFd;
 use std::process::Command;
 use std::time::Duration;
 
@@ -31,8 +33,11 @@ fn main() {
             PollOpt::edge(),
         )
         .unwrap();
+
+        let fd = stdin().as_raw_fd();
+        let mut stdin = unsafe { File::from_raw_fd(fd) };
         poll.register(
-            &EventedFd(&stdin().as_raw_fd()),
+            &EventedFd(&fd),
             Token(1),
             Ready::readable(),
             PollOpt::edge(),
@@ -54,14 +59,17 @@ fn main() {
                         for c in &buffer[..len] {
                             console.write_byte(*c);
                         }
-                        display.borrow_mut().run_once();
                     }
                     Token(1) => {
-                        let len = stdin().read(&mut buffer).unwrap();
+                        let len = stdin.read(&mut buffer).unwrap();
                         master.write(&buffer[..len]).unwrap();
                     }
                     _ => unreachable!(),
                 }
+            }
+
+            if display.borrow_mut().run_once() {
+                break;
             }
         }
     } else {
