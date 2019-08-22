@@ -56,22 +56,52 @@ impl CharacterAttribute {
                     .unwrap()
                     .to_rgb888_cmd()
             }
-            38 => if params[1] == 5 {
-                self.foreground = ConsoleColor::from_console_code(params[2] as u8 + 30).unwrap().to_rgb888_cmd()
-            } else {
-                self.foreground = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
-            },
+            38 => {
+                if params[1] == 5 {
+                    let color = params[2] as u8;
+                    match color {
+                        0..=7 => {
+                            self.foreground = ConsoleColor::from_console_code(color + 30)
+                                .unwrap()
+                                .to_rgb888_cmd()
+                        }
+                        8..=15 => {
+                            self.foreground = ConsoleColor::from_console_code(color + 82)
+                                .unwrap()
+                                .to_rgb888_cmd()
+                        }
+                        _ => warn!("unknown 8-bit color: {:?}", params),
+                    }
+                } else {
+                    self.foreground = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
+                }
+            }
             39 => self.foreground = CharacterAttribute::default().foreground,
             40..=47 | 100..=107 => {
                 self.background = ConsoleColor::from_console_code(code - 10)
                     .unwrap()
                     .to_rgb888_cmd();
             }
-            48 => if params[1] == 5 {
-                self.background = ConsoleColor::from_console_code(params[2] as u8 + 30).unwrap().to_rgb888_cmd()
-            } else {
-                self.background = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
-            },
+            48 => {
+                if params[1] == 5 {
+                    let color = params[2] as u8;
+                    match color {
+                        0..=7 => {
+                            self.background = ConsoleColor::from_console_code(color + 30)
+                                .unwrap()
+                                .to_rgb888_cmd()
+                        }
+                        8..=15 => {
+                            self.background = ConsoleColor::from_console_code(color + 82)
+                                .unwrap()
+                                .to_rgb888_cmd()
+                        }
+                        _ => warn!("unknown 8-bit color: {:?}", params),
+                    }
+                } else {
+                    self.background = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
+                }
+            }
             49 => self.background = CharacterAttribute::default().background,
             _ => warn!("unknown SGR: {:?}", params),
         }
