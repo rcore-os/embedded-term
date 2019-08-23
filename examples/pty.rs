@@ -13,6 +13,7 @@ use std::os::unix::io::AsRawFd;
 use std::os::unix::io::FromRawFd;
 use std::process::Command;
 use std::time::Duration;
+use termios::*;
 
 fn main() {
     let fork = Fork::from_ptmx().unwrap();
@@ -34,7 +35,12 @@ fn main() {
         )
         .unwrap();
 
+        // set to raw mode
         let fd = stdin().as_raw_fd();
+        let mut termios = Termios::from_fd(fd).unwrap();
+        cfmakeraw(&mut termios);
+        tcsetattr(fd, TCSANOW, &termios).unwrap();
+
         let mut stdin = unsafe { File::from_raw_fd(fd) };
         poll.register(
             &EventedFd(&fd),
