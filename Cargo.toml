@@ -13,10 +13,13 @@ description = "The virtual console embedded in rCore kernel: receive text input 
 [dependencies]
 embedded-graphics = "0.6.0-alpha.1"
 vte = "0.3"
-log = "0.4"
+log = { version = "0.4", default-features = false, optional = true }
 
 [dev-dependencies]
 embedded-graphics-simulator = "0.2.0-alpha.1"
 env_logger = "0.6"
 pty = "0.2"
 mio = "0.6"
+
+[features]
+default = ["log"]

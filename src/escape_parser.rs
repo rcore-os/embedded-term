@@ -70,7 +70,11 @@ impl CharacterAttribute {
                                 .unwrap()
                                 .to_rgb888_cmd()
                         }
-                        _ => warn!("unknown 8-bit color: {:?}", params),
+                        _ =>
+                        {
+                            #[cfg(feature = "log")]
+                            warn!("unknown 8-bit color: {:?}", params)
+                        }
                     }
                 } else {
                     self.foreground = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
@@ -96,14 +100,22 @@ impl CharacterAttribute {
                                 .unwrap()
                                 .to_rgb888_cmd()
                         }
-                        _ => warn!("unknown 8-bit color: {:?}", params),
+                        _ =>
+                        {
+                            #[cfg(feature = "log")]
+                            warn!("unknown 8-bit color: {:?}", params)
+                        }
                     }
                 } else {
                     self.background = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
                 }
             }
             49 => self.background = CharacterAttribute::default().background,
-            _ => warn!("unknown SGR: {:?}", params),
+            _ =>
+            {
+                #[cfg(feature = "log")]
+                warn!("unknown SGR: {:?}", params)
+            }
         }
     }
 }

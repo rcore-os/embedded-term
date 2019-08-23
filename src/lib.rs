@@ -13,6 +13,7 @@
 
 #[macro_use]
 extern crate alloc;
+#[cfg(feature = "log")]
 #[macro_use]
 extern crate log;
 
