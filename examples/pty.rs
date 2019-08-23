@@ -74,6 +74,8 @@ fn main() {
                 }
             }
 
+            master.write(&console.get_result()).unwrap();
+
             if display.borrow_mut().run_once() {
                 break;
             }

@@ -3,6 +3,8 @@ use crate::escape_parser::{CharacterAttribute, CSI};
 use crate::graphic::TextOnGraphic;
 use crate::text_buffer::*;
 use crate::text_buffer_cache::TextBufferCache;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 use core::fmt;
 use embedded_graphics::prelude::Drawing;
 use vte::{Parser, Perform};
@@ -29,6 +31,8 @@ struct ConsoleInner<T: TextBuffer> {
     buf: T,
     /// auto wrap
     auto_wrap: bool,
+    /// result buffer
+    result: Vec<u8>,
 }
 
 pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
@@ -58,6 +62,7 @@ impl<T: TextBuffer> Console<T> {
                 attribute: CharacterAttribute::default(),
                 buf: buffer,
                 auto_wrap: true,
+                result: Vec::new(),
             },
         }
     }
@@ -66,6 +71,13 @@ impl<T: TextBuffer> Console<T> {
         #[cfg(feature = "log")]
         trace!("get: {}", byte);
         self.parser.advance(&mut self.inner, byte);
+    }
+
+    /// Read result for some commands
+    pub fn get_result(&mut self) -> Vec<u8> {
+        let mut res = Vec::new();
+        res.append(&mut self.inner.result);
+        res
     }
 }
 
@@ -208,6 +220,23 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
             }
             CSI::EraseDisplayAll => {
                 self.buf.clear();
+            }
+            CSI::DeviceStatusReport => {
+                // CSI
+                self.result.push(0x1B);
+                self.result.push(b'[');
+                self.result.push(b'0');
+                self.result.push(b'n');
+            }
+            CSI::ReportCursorPosition => {
+                // CSI
+                self.result.push(0x1B);
+                self.result
+                    .append(&mut (self.row + 1).to_string().into_bytes());
+                self.result.push(b';');
+                self.result
+                    .append(&mut (self.col + 1).to_string().into_bytes());
+                self.result.push(b'R');
             }
             CSI::EraseDisplayAbove => {
                 for i in 0..self.row {

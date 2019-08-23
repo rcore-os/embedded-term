@@ -147,6 +147,8 @@ pub enum CSI<'a> {
     EraseLineAll,
     EnableBracketedPasteMode,
     DisableBracketedPasteMode,
+    DeviceStatusReport,
+    ReportCursorPosition,
     Unknown,
 }
 
@@ -178,6 +180,11 @@ impl<'a> CSI<'a> {
             },
             b'G' => CSI::CursorMoveColTo(*params.get(1).unwrap_or(&1) - 1),
             b'm' => CSI::SGR(params),
+            b'n' => match *params.get(0).unwrap_or(&0) {
+                5 => CSI::DeviceStatusReport,
+                6 => CSI::ReportCursorPosition,
+                _ => CSI::Unknown,
+            },
             b'd' => CSI::CursorMoveRowTo(n - 1),
             b'h' => match *params.get(0).unwrap_or(&0) {
                 7 => CSI::EnableAutoWrap,
