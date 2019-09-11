@@ -66,6 +66,7 @@ impl<T: TextBuffer> Console<T> {
             },
         }
     }
+
     /// Write a single `byte` to console
     pub fn write_byte(&mut self, byte: u8) {
         #[cfg(feature = "log")]
@@ -78,6 +79,12 @@ impl<T: TextBuffer> Console<T> {
         let mut res = Vec::new();
         res.append(&mut self.inner.result);
         res
+    }
+
+    /// Clear the screen
+    #[allow(dead_code)]
+    pub fn clear(&mut self) {
+        self.inner.clear();
     }
 }
 

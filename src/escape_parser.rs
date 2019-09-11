@@ -147,6 +147,8 @@ pub enum CSI<'a> {
     EraseLineAll,
     EnableBracketedPasteMode,
     DisableBracketedPasteMode,
+    StartBlinkingCursor,
+    StopBlinkingCursor,
     DeviceStatusReport,
     ReportCursorPosition,
     Unknown,
@@ -188,6 +190,7 @@ impl<'a> CSI<'a> {
             b'd' => CSI::CursorMoveRowTo(n - 1),
             b'h' => match *params.get(0).unwrap_or(&0) {
                 7 => CSI::EnableAutoWrap,
+                12 => CSI::StartBlinkingCursor,
                 25 => CSI::ShowCursor,
                 1049 => CSI::EnableAltScreenBuffer,
                 2004 => CSI::EnableBracketedPasteMode,
@@ -195,6 +198,7 @@ impl<'a> CSI<'a> {
             },
             b'l' => match *params.get(0).unwrap_or(&0) {
                 7 => CSI::DisableAutoWrap,
+                12 => CSI::StopBlinkingCursor,
                 25 => CSI::HideCursor,
                 1049 => CSI::DisableAltScreenBuffer,
                 2004 => CSI::DisableBracketedPasteMode,
