@@ -69,7 +69,6 @@ impl<T: TextBuffer> Console<T> {
 
     /// Write a single `byte` to console
     pub fn write_byte(&mut self, byte: u8) {
-        #[cfg(feature = "log")]
         trace!("get: {}", byte);
         self.parser.advance(&mut self.inner, byte);
     }
@@ -119,7 +118,6 @@ impl<T: TextBuffer> ConsoleInner<T> {
 /// Perform actions
 impl<T: TextBuffer> Perform for ConsoleInner<T> {
     fn print(&mut self, c: char) {
-        #[cfg(feature = "log")]
         debug!("print: {:?}", c);
         if self.col >= self.buf.width() {
             if !self.auto_wrap {
@@ -137,7 +135,6 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
     }
 
     fn execute(&mut self, byte: u8) {
-        #[cfg(feature = "log")]
         debug!("execute: {}", byte);
         match byte {
             0x7f | 0x8 => {
@@ -158,31 +155,23 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
             }
             b'\n' => self.new_line(),
             b'\r' => self.col = 0,
-            _ =>
-            {
-                #[cfg(feature = "log")]
-                warn!("unknown control code: {}", byte)
-            }
+            _ => warn!("unknown control code: {}", byte),
         }
     }
 
     fn hook(&mut self, params: &[i64], intermediates: &[u8], ignore: bool) {
-        #[cfg(feature = "log")]
         debug!("hook: {:?}, {:?}, {}", params, intermediates, ignore);
     }
 
     fn put(&mut self, byte: u8) {
-        #[cfg(feature = "log")]
         debug!("put: {}", byte);
     }
 
     fn unhook(&mut self) {
-        #[cfg(feature = "log")]
         debug!("unhook:");
     }
 
     fn osc_dispatch(&mut self, params: &[&[u8]]) {
-        #[cfg(feature = "log")]
         warn!("osc: {:?}", params);
     }
 
@@ -194,7 +183,7 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
         final_byte: char,
     ) {
         let parsed = CSI::new(final_byte as u8, params, intermediates);
-        #[cfg(feature = "log")]
+
         debug!(
             "csi: {:?}, {:?}, {:?}, {} as {:?}",
             params, intermediates, ignore, final_byte, parsed
@@ -259,14 +248,10 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
                     }
                 }
             }
-            CSI::Unknown =>
-            {
-                #[cfg(feature = "log")]
-                warn!(
-                    "unknown CSI: {:?}, {:?}, {:?}, {}",
-                    params, intermediates, ignore, final_byte
-                )
-            }
+            CSI::Unknown => warn!(
+                "unknown CSI: {:?}, {:?}, {:?}, {}",
+                params, intermediates, ignore, final_byte
+            ),
             _ => {
                 // do nothing
             }
@@ -274,7 +259,6 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
     }
 
     fn esc_dispatch(&mut self, params: &[i64], intermediates: &[u8], ignore: bool, byte: u8) {
-        #[cfg(feature = "log")]
         debug!(
             "esc: {:?}, {:?}, {:?}, {}",
             params, intermediates, ignore, byte
@@ -286,7 +270,6 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
                 }
             }
             _ => {
-                #[cfg(feature = "log")]
                 warn!(
                     "unknown esc: {:?}, {:?}, {:?}, {}",
                     params, intermediates, ignore, byte

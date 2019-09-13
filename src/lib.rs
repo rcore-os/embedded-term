@@ -13,9 +13,13 @@
 
 #[macro_use]
 extern crate alloc;
+
 #[cfg(feature = "log")]
 #[macro_use]
 extern crate log;
+#[cfg(not(feature = "log"))]
+#[macro_use]
+mod log;
 
 pub use color::*;
 pub use console::*;
