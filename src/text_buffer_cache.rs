@@ -1,10 +1,10 @@
 use crate::text_buffer::{ConsoleChar, TextBuffer};
-use alloc::collections::VecDeque;
 use alloc::vec::Vec;
 
 /// Cache layer for [`TextBuffer`]
 pub struct TextBufferCache<T: TextBuffer> {
-    buf: VecDeque<Vec<ConsoleChar>>,
+    buf: Vec<Vec<ConsoleChar>>,
+    row_offset: usize,
     inner: T,
 }
 
@@ -12,19 +12,20 @@ impl<T: TextBuffer> TextBufferCache<T> {
     /// Create a cache layer for `inner` text buffer
     pub fn new(inner: T) -> Self {
         TextBufferCache {
-            buf: VecDeque::from(vec![
-                vec![ConsoleChar::default(); inner.width()];
-                inner.height()
-            ]),
+            buf: vec![vec![ConsoleChar::default(); inner.width()]; inner.height()],
+            row_offset: 0,
             inner,
         }
     }
-    /// Write cache to inner buffer
-    fn flush(&mut self) {
-        for i in 0..self.height() {
-            for j in 0..self.width() {
-                self.inner.write(i, j, self.buf[i][j]);
-            }
+    /// Get real row of inner buffer
+    fn real_row(&self, row: usize) -> usize {
+        (self.row_offset + row) % self.inner.height()
+    }
+    /// Clear line at `row`
+    fn clear_line(&mut self, row: usize) {
+        for col in 0..self.width() {
+            self.buf[row][col] = ConsoleChar::default();
+            self.inner.write(row, col, ConsoleChar::default());
         }
     }
 }
@@ -37,18 +38,16 @@ impl<T: TextBuffer> TextBuffer for TextBufferCache<T> {
         self.inner.height()
     }
     fn read(&self, row: usize, col: usize) -> ConsoleChar {
+        let row = self.real_row(row);
         self.buf[row][col]
     }
     fn write(&mut self, row: usize, col: usize, ch: ConsoleChar) {
+        let row = self.real_row(row);
         self.buf[row][col] = ch;
         self.inner.write(row, col, ch);
     }
     fn new_line(&mut self) {
-        let mut new_line = self.buf.pop_front().unwrap();
-        for c in new_line.iter_mut() {
-            *c = ConsoleChar::default();
-        }
-        self.buf.push_back(new_line);
-        self.flush();
+        self.row_offset = (self.row_offset + 1) % self.inner.height();
+        self.clear_line(self.row_offset);
     }
 }
