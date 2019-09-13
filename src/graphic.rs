@@ -56,14 +56,14 @@ where
         let (x, y) = (col as i32 * 8, row as i32 * 16);
         let item = Font8x16::render_str(s)
             .style(style)
-            .translate(Coord::new(x, y));
+            .translate(Point::new(x, y));
         self.graphic.draw(item);
         if ch.attr.strikethrough {
-            let line = Line::new(Coord::new(x, y + 8), Coord::new(x + 8, y + 8)).style(style);
+            let line = Line::new(Point::new(x, y + 8), Point::new(x + 8, y + 8)).style(style);
             self.graphic.draw(line);
         }
         if ch.attr.underline {
-            let line = Line::new(Coord::new(x, y + 15), Coord::new(x + 8, y + 15)).style(style);
+            let line = Line::new(Point::new(x, y + 15), Point::new(x + 8, y + 15)).style(style);
             self.graphic.draw(line);
         }
     }
