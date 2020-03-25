@@ -49,9 +49,9 @@ where
         let mut utf8_buf = [0u8; 8];
         let s = ch.char.encode_utf8(&mut utf8_buf);
         let (foreground, background) = if ch.attr.reverse {
-            (ch.attr.foreground, ch.attr.background)
-        } else {
             (ch.attr.background, ch.attr.foreground)
+        } else {
+            (ch.attr.foreground, ch.attr.background)
         };
         let style = text_style!(
             font = Font8x16,
