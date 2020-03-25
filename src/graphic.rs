@@ -22,10 +22,11 @@ impl<D> TextOnGraphic<D>
 where
     D: DrawTarget<Rgb888>,
 {
-    pub fn new(width: u32, height: u32, graphic: D) -> Self {
+    /// Create a new text buffer on graphic.
+    pub fn new(graphic: D) -> Self {
         TextOnGraphic {
-            width,
-            height,
+            width: graphic.size().width,
+            height: graphic.size().height,
             graphic,
         }
     }

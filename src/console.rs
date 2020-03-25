@@ -39,8 +39,8 @@ pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
 
 impl<D: DrawTarget<Rgb888>> Console<TextBufferCache<TextOnGraphic<D>>> {
     /// Create a console on top of a frame buffer
-    pub fn on_frame_buffer(width: u32, height: u32, buffer: D) -> Self {
-        Self::on_cached_text_buffer(TextOnGraphic::new(width, height, buffer))
+    pub fn on_frame_buffer(buffer: D) -> Self {
+        Self::on_cached_text_buffer(TextOnGraphic::new(buffer))
     }
 }
 

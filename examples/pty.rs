@@ -24,12 +24,10 @@ fn main() {
 
     if let Ok(mut master) = fork.is_parent() {
         env_logger::init();
-        let (width, height) = (800, 600);
-        let display = SimulatorDisplay::<Rgb888>::new(Size::new(width, height));
+        let display = SimulatorDisplay::<Rgb888>::new(Size::new(800, 600));
         let display = RefCell::new(display);
 
-        let mut console =
-            Console::on_frame_buffer(width as u32, height as u32, DisplayWrapper(&display));
+        let mut console = Console::on_frame_buffer(DisplayWrapper(&display));
 
         let poll = Poll::new().unwrap();
         poll.register(

@@ -11,12 +11,10 @@ use std::time::Duration;
 
 fn main() {
     env_logger::init();
-    let (width, height) = (800, 600);
-    let display = SimulatorDisplay::<Rgb888>::new(Size::new(width, height));
+    let display = SimulatorDisplay::<Rgb888>::new(Size::new(800, 600));
     let display = Arc::new(Mutex::new(display));
 
-    let mut console =
-        Console::on_frame_buffer(width as u32, height as u32, DisplayWrapper(display.clone()));
+    let mut console = Console::on_frame_buffer(DisplayWrapper(display.clone()));
     std::thread::spawn(move || {
         for c in std::io::stdin().lock().bytes() {
             let c = c.unwrap();
