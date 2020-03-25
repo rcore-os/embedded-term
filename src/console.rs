@@ -6,7 +6,7 @@ use crate::text_buffer_cache::TextBufferCache;
 use alloc::string::ToString;
 use alloc::vec::Vec;
 use core::fmt;
-use embedded_graphics::prelude::Drawing;
+use embedded_graphics::prelude::DrawTarget;
 use vte::{Parser, Perform};
 
 /// Console
@@ -37,7 +37,7 @@ struct ConsoleInner<T: TextBuffer> {
 
 pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
 
-impl<D: Drawing<Rgb888>> Console<TextBufferCache<TextOnGraphic<D>>> {
+impl<D: DrawTarget<Rgb888>> Console<TextBufferCache<TextOnGraphic<D>>> {
     /// Create a console on top of a frame buffer
     pub fn on_frame_buffer(width: u32, height: u32, buffer: D) -> Self {
         Self::on_cached_text_buffer(TextOnGraphic::new(width, height, buffer))
@@ -75,9 +75,7 @@ impl<T: TextBuffer> Console<T> {
 
     /// Read result for some commands
     pub fn get_result(&mut self) -> Vec<u8> {
-        let mut res = Vec::new();
-        res.append(&mut self.inner.result);
-        res
+        self.inner.result.clone()
     }
 
     /// Clear the screen
@@ -159,8 +157,11 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
         }
     }
 
-    fn hook(&mut self, params: &[i64], intermediates: &[u8], ignore: bool) {
-        debug!("hook: {:?}, {:?}, {}", params, intermediates, ignore);
+    fn hook(&mut self, params: &[i64], intermediates: &[u8], ignore: bool, action: char) {
+        debug!(
+            "hook: {:?}, {:?}, {}, {:?}",
+            params, intermediates, ignore, action
+        );
     }
 
     fn put(&mut self, byte: u8) {
@@ -171,8 +172,11 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
         debug!("unhook:");
     }
 
-    fn osc_dispatch(&mut self, params: &[&[u8]]) {
-        warn!("osc: {:?}", params);
+    fn osc_dispatch(&mut self, params: &[&[u8]], bell_terminated: bool) {
+        warn!(
+            "osc: params={:?}, bell_terminated={:?}",
+            params, bell_terminated
+        );
     }
 
     fn csi_dispatch(
@@ -258,11 +262,8 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
         }
     }
 
-    fn esc_dispatch(&mut self, params: &[i64], intermediates: &[u8], ignore: bool, byte: u8) {
-        debug!(
-            "esc: {:?}, {:?}, {:?}, {}",
-            params, intermediates, ignore, byte
-        );
+    fn esc_dispatch(&mut self, intermediates: &[u8], ignore: bool, byte: u8) {
+        debug!("esc: {:?}, {:?}, {}", intermediates, ignore, byte);
         match byte {
             b'K' => {
                 for i in self.col..self.buf.height() {
@@ -270,10 +271,7 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
                 }
             }
             _ => {
-                warn!(
-                    "unknown esc: {:?}, {:?}, {:?}, {}",
-                    params, intermediates, ignore, byte
-                );
+                warn!("unknown esc: {:?}, {:?}, {}", intermediates, ignore, byte);
             }
         }
     }

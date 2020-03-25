@@ -1,6 +1,6 @@
 //! The virtual console embedded in rCore kernel.
 //!
-//! The [`Console`] can be built on top of either a [`TextBuffer`] or a frame buffer ([`Drawing`]).
+//! The [`Console`] can be built on top of either a [`TextBuffer`] or a frame buffer ([`DrawTarget`]).
 //!
 //! This crate is no_std compatible.
 //!
@@ -23,7 +23,7 @@ mod log;
 
 pub use color::*;
 pub use console::*;
-pub use embedded_graphics::{self, prelude::Pixel, Drawing};
+pub use embedded_graphics::{self, prelude::Pixel, DrawTarget};
 pub use graphic::*;
 pub use text_buffer::*;
 pub use text_buffer_cache::*;

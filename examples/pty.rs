@@ -1,9 +1,13 @@
-use embedded_graphics_simulator::{DisplayBuilder, RgbDisplay};
+use embedded_graphics::prelude::Size;
+use embedded_graphics_simulator::{
+    OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+};
 use mio::unix::EventedFd;
 use mio::*;
 use pty::fork::*;
-use rcore_console::{Console, Drawing, Pixel, Rgb888};
+use rcore_console::{Console, DrawTarget, Pixel, Rgb888};
 use std::cell::RefCell;
+use std::convert::Infallible;
 use std::env::args_os;
 use std::fs::File;
 use std::io::stdin;
@@ -21,7 +25,8 @@ fn main() {
     if let Some(mut master) = fork.is_parent().ok() {
         env_logger::init();
         let (width, height) = (800, 600);
-        let display = RefCell::new(DisplayBuilder::new().size(width, height).build_rgb());
+        let display = SimulatorDisplay::<Rgb888>::new(Size::new(width, height));
+        let display = RefCell::new(display);
 
         let mut console =
             Console::on_frame_buffer(width as u32, height as u32, DisplayWrapper(&display));
@@ -51,7 +56,8 @@ fn main() {
         .unwrap();
         let mut events = Events::with_capacity(1024);
 
-        display.borrow_mut().run_once();
+        let output_settings = OutputSettingsBuilder::new().build();
+        let mut window = Window::new("Example", &output_settings);
 
         loop {
             poll.poll(&mut events, Some(Duration::from_millis(10)))
@@ -76,7 +82,8 @@ fn main() {
 
             master.write(&console.get_result()).unwrap();
 
-            if display.borrow_mut().run_once() {
+            window.update(&display.borrow_mut());
+            if window.events().any(|e| e == SimulatorEvent::Quit) {
                 break;
             }
         }
@@ -91,13 +98,16 @@ fn main() {
     }
 }
 
-struct DisplayWrapper<'a>(&'a RefCell<RgbDisplay>);
+struct DisplayWrapper<'a>(&'a RefCell<SimulatorDisplay<Rgb888>>);
 
-impl Drawing<Rgb888> for DisplayWrapper<'_> {
-    fn draw<T>(&mut self, item: T)
-    where
-        T: IntoIterator<Item = Pixel<Rgb888>>,
-    {
-        self.0.borrow_mut().draw(item)
+impl DrawTarget<Rgb888> for DisplayWrapper<'_> {
+    type Error = Infallible;
+
+    fn draw_pixel(&mut self, item: Pixel<Rgb888>) -> core::result::Result<(), Self::Error> {
+        self.0.borrow_mut().draw_pixel(item)
+    }
+
+    fn size(&self) -> Size {
+        self.0.borrow().size()
     }
 }

@@ -12,13 +12,13 @@ description = "The virtual console embedded in rCore kernel: receive text input 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-embedded-graphics = "=0.6.0-alpha.2"
-vte = "0.3"
+embedded-graphics = "0.6"
+vte = "0.7"
 log = { version = "0.4", default-features = false, optional = true }
 
 [dev-dependencies]
-embedded-graphics-simulator = "=0.2.0-alpha.1"
-env_logger = "0.6"
+embedded-graphics-simulator = "0.2"
+env_logger = "0.7"
 pty = "0.2"
 mio = "0.6"
 termios = "0.3"

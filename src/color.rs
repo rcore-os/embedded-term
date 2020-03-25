@@ -27,7 +27,7 @@ impl ConsoleColor {
     /// Convert to ANSI escape code
     ///
     /// Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code#Colors]
-    pub fn to_console_code(&self) -> u8 {
+    pub fn to_console_code(self) -> u8 {
         use self::ConsoleColor::*;
         match self {
             Black => 30,
@@ -73,7 +73,7 @@ impl ConsoleColor {
     }
     /// Convert to `Rgb888` in `CMD` color scheme.
     /// Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code#Colors]
-    pub fn to_rgb888_cmd(&self) -> Rgb888 {
+    pub fn to_rgb888_cmd(self) -> Rgb888 {
         use self::ConsoleColor::*;
         match self {
             Black => Rgb888::new(0, 0, 0),
