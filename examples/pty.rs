@@ -22,7 +22,7 @@ use termios::*;
 fn main() {
     let fork = Fork::from_ptmx().unwrap();
 
-    if let Some(mut master) = fork.is_parent().ok() {
+    if let Ok(mut master) = fork.is_parent() {
         env_logger::init();
         let (width, height) = (800, 600);
         let display = SimulatorDisplay::<Rgb888>::new(Size::new(width, height));
@@ -74,13 +74,13 @@ fn main() {
                     }
                     Token(1) => {
                         let len = stdin.read(&mut buffer).unwrap();
-                        master.write(&buffer[..len]).unwrap();
+                        master.write_all(&buffer[..len]).unwrap();
                     }
                     _ => unreachable!(),
                 }
             }
 
-            master.write(&console.get_result()).unwrap();
+            master.write_all(&console.get_result()).unwrap();
 
             window.update(&display.borrow_mut());
             if window.events().any(|e| e == SimulatorEvent::Quit) {

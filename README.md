@@ -1,6 +1,6 @@
 # rcore-console
 
-[![Build Status](https://travis-ci.org/rcore-os/rcore-console.svg?branch=master)](https://travis-ci.org/rcore-os/rcore-console)
+[![Actions Status](https://github.com/rcore-os/rcore-console/workflows/CI/badge.svg)](https://github.com/rcore-os/rcore-console/actions)
 
 The virtual console embedded in rCore kernel.
 
