@@ -10,6 +10,7 @@
 #![no_std]
 #![deny(unsafe_code)]
 #![deny(warnings)]
+#![deny(missing_docs)]
 
 #[macro_use]
 extern crate alloc;
@@ -21,12 +22,16 @@ extern crate log;
 #[macro_use]
 mod log;
 
-pub use color::*;
 pub use console::*;
-pub use embedded_graphics::{self, prelude::Pixel, DrawTarget};
-pub use graphic::*;
-pub use text_buffer::*;
-pub use text_buffer_cache::*;
+pub use embedded_graphics::{
+    self,
+    pixelcolor::Rgb888,
+    prelude::{Pixel, Size},
+    DrawTarget,
+};
+pub use graphic::TextOnGraphic;
+pub use text_buffer::TextBuffer;
+pub use text_buffer_cache::TextBufferCache;
 
 mod color;
 mod console;

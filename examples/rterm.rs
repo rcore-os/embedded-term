@@ -1,8 +1,7 @@
-use embedded_graphics::prelude::Size;
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
-use rcore_console::{Console, DrawTarget, Pixel, Rgb888};
+use rcore_console::{Console, DrawTarget, Pixel, Rgb888, Size};
 
 use std::convert::Infallible;
 use std::io::Read;

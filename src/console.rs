@@ -11,8 +11,7 @@ use vte::{Parser, Perform};
 
 /// Console
 ///
-/// Input string with control sequence,
-/// output to a [`TextBuffer`].
+/// Input string with control sequence, output to a [`TextBuffer`].
 pub struct Console<T: TextBuffer> {
     /// ANSI escape sequence parser
     parser: Parser,
@@ -35,6 +34,7 @@ struct ConsoleInner<T: TextBuffer> {
     result: Vec<u8>,
 }
 
+/// Console on top of a frame buffer
 pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
 
 impl<D: DrawTarget<Rgb888>> Console<TextBufferCache<TextOnGraphic<D>>> {
