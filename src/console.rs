@@ -1,12 +1,11 @@
 use crate::color::Rgb888;
 use crate::escape_parser::{CharacterAttribute, CSI};
 use crate::graphic::TextOnGraphic;
-use crate::text_buffer::*;
+use crate::text_buffer::{ConsoleChar, TextBuffer};
 use crate::text_buffer_cache::TextBufferCache;
-use alloc::string::ToString;
-use alloc::vec::Vec;
+use alloc::{string::ToString, vec::Vec};
 use core::fmt;
-use embedded_graphics::prelude::DrawTarget;
+use embedded_graphics::prelude::{DrawTarget, OriginDimensions};
 use vte::{Parser, Perform};
 
 /// Console
@@ -37,10 +36,11 @@ struct ConsoleInner<T: TextBuffer> {
 /// Console on top of a frame buffer
 pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
 
-impl<D: DrawTarget<Rgb888>> Console<TextBufferCache<TextOnGraphic<D>>> {
+impl<D: DrawTarget<Color = Rgb888> + OriginDimensions> Console<TextBufferCache<TextOnGraphic<D>>> {
     /// Create a console on top of a frame buffer
     pub fn on_frame_buffer(buffer: D) -> Self {
-        Self::on_cached_text_buffer(TextOnGraphic::new(buffer))
+        let size = buffer.size();
+        Self::on_cached_text_buffer(TextOnGraphic::new(buffer, size.width, size.height))
     }
 }
 

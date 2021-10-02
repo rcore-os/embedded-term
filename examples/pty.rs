@@ -1,22 +1,15 @@
+use std::io::{stdin, Read, Write};
+use std::os::unix::io::{AsRawFd, FromRawFd};
+use std::{cell::RefCell, convert::Infallible, fs::File, process::Command, time::Duration};
+
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
-use mio::unix::EventedFd;
-use mio::*;
-use pty::fork::*;
-use rcore_console::{Console, DrawTarget, Pixel, Rgb888, Size};
-use std::cell::RefCell;
-use std::convert::Infallible;
-use std::env::args_os;
-use std::fs::File;
-use std::io::stdin;
-use std::io::Read;
-use std::io::Write;
-use std::os::unix::io::AsRawFd;
-use std::os::unix::io::FromRawFd;
-use std::process::Command;
-use std::time::Duration;
-use termios::*;
+use mio::{unix::EventedFd, Events, Poll, PollOpt, Ready, Token};
+use pty::fork::Fork;
+use termios::{cfmakeraw, tcsetattr, Termios, TCSANOW};
+
+use rcore_console::{Console, DrawTarget, OriginDimensions, Pixel, Rgb888, Size};
 
 fn main() {
     let fork = Fork::from_ptmx().unwrap();
@@ -85,7 +78,7 @@ fn main() {
             }
         }
     } else {
-        let mut args = args_os();
+        let mut args = std::env::args_os();
         args.next(); // skip myself
         let name = args.next().unwrap();
         Command::new(name)
@@ -97,13 +90,19 @@ fn main() {
 
 struct DisplayWrapper<'a>(&'a RefCell<SimulatorDisplay<Rgb888>>);
 
-impl DrawTarget<Rgb888> for DisplayWrapper<'_> {
+impl DrawTarget for DisplayWrapper<'_> {
+    type Color = Rgb888;
     type Error = Infallible;
 
-    fn draw_pixel(&mut self, item: Pixel<Rgb888>) -> core::result::Result<(), Self::Error> {
-        self.0.borrow_mut().draw_pixel(item)
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        self.0.borrow_mut().draw_iter(pixels)
     }
+}
 
+impl OriginDimensions for DisplayWrapper<'_> {
     fn size(&self) -> Size {
         self.0.borrow().size()
     }

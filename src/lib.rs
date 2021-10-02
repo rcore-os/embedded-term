@@ -22,12 +22,11 @@ extern crate log;
 #[macro_use]
 mod log;
 
-pub use console::*;
+pub use console::{Console, ConsoleOnGraphic};
 pub use embedded_graphics::{
     self,
     pixelcolor::Rgb888,
-    prelude::{Pixel, Size},
-    DrawTarget,
+    prelude::{DrawTarget, OriginDimensions, Pixel, Size},
 };
 pub use graphic::TextOnGraphic;
 pub use text_buffer::TextBuffer;
