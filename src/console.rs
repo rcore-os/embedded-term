@@ -193,7 +193,7 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
             params, intermediates, ignore, final_byte, parsed
         );
         match parsed {
-            CSI::SGR(code) => self.attribute.apply_sgr(code),
+            CSI::SGR(params) => self.attribute.apply_sgr(params),
             CSI::CursorMove(dr, dc) => {
                 self.row = (self.row as i64 + dr) as usize;
                 self.col = (self.col as i64 + dc) as usize;

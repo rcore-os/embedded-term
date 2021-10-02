@@ -40,70 +40,90 @@ impl Default for CharacterAttribute {
 impl CharacterAttribute {
     /// Parse and apply SGR (Select Graphic Rendition) parameters.
     pub fn apply_sgr(&mut self, params: &[i64]) {
-        let code = *params.get(0).unwrap_or(&0) as u8;
-        match code {
-            0 => *self = CharacterAttribute::default(),
-            1 => self.bold = true,
-            4 => self.underline = true,
-            7 => self.reverse = true,
-            9 => self.strikethrough = true,
-            22 => self.bold = false,
-            24 => self.underline = false,
-            27 => self.reverse = false,
-            29 => self.strikethrough = false,
-            30..=37 | 90..=97 => {
-                self.foreground = ConsoleColor::from_console_code(code)
-                    .unwrap()
-                    .to_rgb888_cmd()
-            }
-            38 => {
-                if params[1] == 5 {
-                    let color = params[2] as u8;
-                    match color {
-                        0..=7 => {
-                            self.foreground = ConsoleColor::from_console_code(color + 30)
-                                .unwrap()
-                                .to_rgb888_cmd()
-                        }
-                        8..=15 => {
-                            self.foreground = ConsoleColor::from_console_code(color + 82)
-                                .unwrap()
-                                .to_rgb888_cmd()
-                        }
-                        _ => warn!("unknown 8-bit color: {:?}", params),
-                    }
-                } else {
-                    self.foreground = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
+        let mut i = 0;
+        while i < params.len() {
+            let code = params[i] as u8;
+            match code {
+                0 => *self = CharacterAttribute::default(),
+                1 => self.bold = true,
+                4 => self.underline = true,
+                7 => self.reverse = true,
+                9 => self.strikethrough = true,
+                22 => self.bold = false,
+                24 => self.underline = false,
+                27 => self.reverse = false,
+                29 => self.strikethrough = false,
+                30..=37 | 90..=97 => {
+                    self.foreground = ConsoleColor::from_console_code(code)
+                        .unwrap()
+                        .to_rgb888_cmd()
                 }
-            }
-            39 => self.foreground = CharacterAttribute::default().foreground,
-            40..=47 | 100..=107 => {
-                self.background = ConsoleColor::from_console_code(code - 10)
-                    .unwrap()
-                    .to_rgb888_cmd();
-            }
-            48 => {
-                if params[1] == 5 {
-                    let color = params[2] as u8;
-                    match color {
-                        0..=7 => {
-                            self.background = ConsoleColor::from_console_code(color + 30)
-                                .unwrap()
-                                .to_rgb888_cmd()
+                38 => match params[i + 1] {
+                    5 => {
+                        let color = params[i + 2] as u8;
+                        match color {
+                            0..=7 => {
+                                self.foreground = ConsoleColor::from_console_code(color + 30)
+                                    .unwrap()
+                                    .to_rgb888_cmd()
+                            }
+                            8..=15 => {
+                                self.foreground = ConsoleColor::from_console_code(color + 82)
+                                    .unwrap()
+                                    .to_rgb888_cmd()
+                            }
+                            _ => warn!("unknown 8-bit color: {:?}", params),
                         }
-                        8..=15 => {
-                            self.background = ConsoleColor::from_console_code(color + 82)
-                                .unwrap()
-                                .to_rgb888_cmd()
-                        }
-                        _ => warn!("unknown 8-bit color: {:?}", params),
+                        i += 2;
                     }
-                } else {
-                    self.background = Rgb888::new(params[2] as u8, params[3] as u8, params[4] as u8)
+                    2 => {
+                        self.foreground = Rgb888::new(
+                            params[i + 2] as u8,
+                            params[i + 3] as u8,
+                            params[i + 4] as u8,
+                        );
+                        i += 4;
+                    }
+                    _ => warn!("invalid params when set foreground color: {:?}", params),
+                },
+                39 => self.foreground = CharacterAttribute::default().foreground,
+                40..=47 | 100..=107 => {
+                    self.background = ConsoleColor::from_console_code(code - 10)
+                        .unwrap()
+                        .to_rgb888_cmd();
                 }
+                48 => match params[i + 1] {
+                    5 => {
+                        let color = params[i + 2] as u8;
+                        match color {
+                            0..=7 => {
+                                self.background = ConsoleColor::from_console_code(color + 30)
+                                    .unwrap()
+                                    .to_rgb888_cmd()
+                            }
+                            8..=15 => {
+                                self.background = ConsoleColor::from_console_code(color + 82)
+                                    .unwrap()
+                                    .to_rgb888_cmd()
+                            }
+                            _ => warn!("unknown 8-bit color: {:?}", params),
+                        }
+                        i += 2;
+                    }
+                    2 => {
+                        self.background = Rgb888::new(
+                            params[i + 2] as u8,
+                            params[i + 3] as u8,
+                            params[i + 4] as u8,
+                        );
+                        i += 4;
+                    }
+                    _ => warn!("invalid params when set background color: {:?}", params),
+                },
+                49 => self.background = CharacterAttribute::default().background,
+                _ => warn!("unknown SGR: {:?}", params),
             }
-            49 => self.background = CharacterAttribute::default().background,
-            _ => warn!("unknown SGR: {:?}", params),
+            i += 1;
         }
     }
 }
