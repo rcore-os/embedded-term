@@ -8,9 +8,11 @@ use std::io::Read;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+const DISPLAY_SIZE: Size = Size::new(800, 600);
+
 fn main() {
     env_logger::init();
-    let display = SimulatorDisplay::<Rgb888>::new(Size::new(800, 600));
+    let display = SimulatorDisplay::<Rgb888>::new(DISPLAY_SIZE);
     let display = Arc::new(Mutex::new(display));
 
     let mut console = Console::on_frame_buffer(DisplayWrapper(display.clone()));

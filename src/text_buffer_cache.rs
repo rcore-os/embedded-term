@@ -1,9 +1,10 @@
-use crate::text_buffer::{ConsoleChar, TextBuffer};
+use crate::cell::Cell;
+use crate::text_buffer::TextBuffer;
 use alloc::vec::Vec;
 
 /// Cache layer for [`TextBuffer`]
 pub struct TextBufferCache<T: TextBuffer> {
-    buf: Vec<Vec<ConsoleChar>>,
+    buf: Vec<Vec<Cell>>,
     row_offset: usize,
     inner: T,
 }
@@ -12,7 +13,7 @@ impl<T: TextBuffer> TextBufferCache<T> {
     /// Create a cache layer for `inner` text buffer
     pub fn new(inner: T) -> Self {
         TextBufferCache {
-            buf: vec![vec![ConsoleChar::default(); inner.width()]; inner.height()],
+            buf: vec![vec![Cell::default(); inner.width()]; inner.height()],
             row_offset: 0,
             inner,
         }
@@ -22,32 +23,47 @@ impl<T: TextBuffer> TextBufferCache<T> {
         (self.row_offset + row) % self.inner.height()
     }
     /// Clear line at `row`
-    fn clear_line(&mut self, row: usize) {
+    fn clear_line(&mut self, row: usize, cell: Cell) {
         for col in 0..self.width() {
-            self.buf[row][col] = ConsoleChar::default();
-            self.inner.write(row, col, ConsoleChar::default());
+            self.buf[row][col] = cell;
+            self.inner.write(row, col, cell);
         }
     }
 }
 
 impl<T: TextBuffer> TextBuffer for TextBufferCache<T> {
+    #[inline]
     fn width(&self) -> usize {
         self.inner.width()
     }
+
+    #[inline]
     fn height(&self) -> usize {
         self.inner.height()
     }
-    fn read(&self, row: usize, col: usize) -> ConsoleChar {
+
+    #[inline]
+    fn read(&self, row: usize, col: usize) -> Cell {
         let row = self.real_row(row);
         self.buf[row][col]
     }
-    fn write(&mut self, row: usize, col: usize, ch: ConsoleChar) {
+
+    #[inline]
+    fn write(&mut self, row: usize, col: usize, cell: Cell) {
         let row = self.real_row(row);
-        self.buf[row][col] = ch;
-        self.inner.write(row, col, ch);
+        self.buf[row][col] = cell;
+        self.inner.write(row, col, cell);
     }
-    fn new_line(&mut self) {
+
+    #[inline]
+    fn new_line(&mut self, cell: Cell) {
         self.row_offset = (self.row_offset + 1) % self.inner.height();
-        self.clear_line(self.row_offset);
+        self.clear_line(self.row_offset, cell);
+    }
+
+    #[inline]
+    fn clear(&mut self, cell: Cell) {
+        self.row_offset = 0;
+        self.inner.clear(cell);
     }
 }

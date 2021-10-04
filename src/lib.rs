@@ -32,9 +32,10 @@ pub use graphic::TextOnGraphic;
 pub use text_buffer::TextBuffer;
 pub use text_buffer_cache::TextBufferCache;
 
+mod ansi;
+mod cell;
 mod color;
 mod console;
-mod escape_parser;
 mod graphic;
 mod text_buffer;
 mod text_buffer_cache;

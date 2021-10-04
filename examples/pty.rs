@@ -5,22 +5,24 @@ use std::{cell::RefCell, convert::Infallible, fs::File, process::Command, time::
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
+use libc::{self, winsize};
 use mio::{unix::EventedFd, Events, Poll, PollOpt, Ready, Token};
 use pty::fork::Fork;
 use termios::{cfmakeraw, tcsetattr, Termios, TCSANOW};
 
 use rcore_console::{Console, DrawTarget, OriginDimensions, Pixel, Rgb888, Size};
 
+const DISPLAY_SIZE: Size = Size::new(800, 600);
+
 fn main() {
     let fork = Fork::from_ptmx().unwrap();
 
     if let Ok(mut master) = fork.is_parent() {
         env_logger::init();
-        let display = SimulatorDisplay::<Rgb888>::new(Size::new(800, 600));
+        let display = SimulatorDisplay::<Rgb888>::new(DISPLAY_SIZE);
         let display = RefCell::new(display);
 
         let mut console = Console::on_frame_buffer(DisplayWrapper(&display));
-
         let poll = Poll::new().unwrap();
         poll.register(
             &EventedFd(&master.as_raw_fd()),
@@ -35,6 +37,20 @@ fn main() {
         let mut termios = Termios::from_fd(fd).unwrap();
         cfmakeraw(&mut termios);
         tcsetattr(fd, TCSANOW, &termios).unwrap();
+
+        let ws = winsize {
+            ws_row: console.rows() as libc::c_ushort,
+            ws_col: console.columns() as libc::c_ushort,
+            ws_xpixel: DISPLAY_SIZE.width as libc::c_ushort,
+            ws_ypixel: DISPLAY_SIZE.height as libc::c_ushort,
+        };
+        let res = unsafe { libc::ioctl(master.as_raw_fd(), libc::TIOCSWINSZ, &ws as *const _) };
+        if res < 0 {
+            panic!(
+                "ioctl TIOCSWINSZ failed: {}",
+                std::io::Error::last_os_error()
+            );
+        }
 
         let mut stdin = unsafe { File::from_raw_fd(fd) };
         poll.register(
@@ -70,7 +86,9 @@ fn main() {
                 }
             }
 
-            master.write_all(&console.get_result()).unwrap();
+            while let Some(byte) = console.pop_report() {
+                master.write_all(&[byte]).unwrap();
+            }
 
             window.update(&display.borrow_mut());
             if window.events().any(|e| e == SimulatorEvent::Quit) {

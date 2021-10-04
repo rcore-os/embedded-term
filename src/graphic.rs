@@ -1,7 +1,8 @@
-use crate::text_buffer::{ConsoleChar, TextBuffer};
+use crate::cell::{Cell, Flags};
+use crate::text_buffer::TextBuffer;
 use embedded_graphics::{
     mono_font::{
-        iso_8859_1::{FONT_9X18, FONT_9X18_BOLD},
+        iso_8859_1::{FONT_9X18 as FONT, FONT_9X18_BOLD as FONT_BOLD},
         MonoTextStyleBuilder,
     },
     pixelcolor::Rgb888,
@@ -9,13 +10,13 @@ use embedded_graphics::{
     text::{Baseline, Text, TextStyle},
 };
 
-const CHAR_SIZE: Size = FONT_9X18.character_size;
+const CHAR_SIZE: Size = FONT.character_size;
 
 /// A [`TextBuffer`] on top of a frame buffer
 ///
 /// The internal use [`embedded_graphics`] crate to render fonts to pixels.
 ///
-/// The underlying frame buffer needs to implement `DrawTarget<Rgb888>` trait
+/// The underlying frame buffer needs to implement `DrawTarget<Color = Rgb888>` trait
 /// to draw pixels in RGB format.
 pub struct TextOnGraphic<D>
 where
@@ -44,35 +45,44 @@ impl<D> TextBuffer for TextOnGraphic<D>
 where
     D: DrawTarget<Color = Rgb888>,
 {
+    #[inline]
     fn width(&self) -> usize {
         (self.width / CHAR_SIZE.width) as usize
     }
+
+    #[inline]
     fn height(&self) -> usize {
         (self.height / CHAR_SIZE.height) as usize
     }
-    fn read(&self, _row: usize, _col: usize) -> ConsoleChar {
+
+    fn read(&self, _row: usize, _col: usize) -> Cell {
         unimplemented!("reading char from graphic is unsupported")
     }
-    fn write(&mut self, row: usize, col: usize, ch: ConsoleChar) {
+
+    #[inline]
+    fn write(&mut self, row: usize, col: usize, cell: Cell) {
+        if row >= self.height() || col >= self.width() {
+            return;
+        }
         let mut utf8_buf = [0u8; 8];
-        let s = ch.char.encode_utf8(&mut utf8_buf);
-        let (foreground, background) = if ch.attr.reverse {
-            (ch.attr.background, ch.attr.foreground)
+        let s = cell.c.encode_utf8(&mut utf8_buf);
+        let (fg, bg) = if cell.flags.contains(Flags::INVERSE) {
+            (cell.bg, cell.fg)
         } else {
-            (ch.attr.foreground, ch.attr.background)
+            (cell.fg, cell.bg)
         };
         let mut style = MonoTextStyleBuilder::new()
-            .text_color(foreground)
-            .background_color(background);
-        if ch.attr.bold {
-            style = style.font(&FONT_9X18_BOLD);
+            .text_color(fg.to_rgb())
+            .background_color(bg.to_rgb());
+        if cell.flags.contains(Flags::BOLD) {
+            style = style.font(&FONT_BOLD);
         } else {
-            style = style.font(&FONT_9X18);
+            style = style.font(&FONT);
         }
-        if ch.attr.strikethrough {
+        if cell.flags.contains(Flags::STRIKEOUT) {
             style = style.strikethrough();
         }
-        if ch.attr.underline {
+        if cell.flags.contains(Flags::UNDERLINE) {
             style = style.underline();
         }
         let text = Text::with_text_style(
