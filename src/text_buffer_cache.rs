@@ -57,8 +57,8 @@ impl<T: TextBuffer> TextBuffer for TextBufferCache<T> {
 
     #[inline]
     fn new_line(&mut self, cell: Cell) {
-        self.row_offset = (self.row_offset + 1) % self.inner.height();
         self.clear_line(self.row_offset, cell);
+        self.row_offset = (self.row_offset + 1) % self.inner.height();
     }
 
     #[inline]
