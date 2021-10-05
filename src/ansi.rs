@@ -1,4 +1,4 @@
-use alloc::{string::String, vec::Vec};
+use alloc::string::String;
 use core::convert::TryFrom;
 
 use vte::{Params, ParamsIter, Perform};
@@ -434,12 +434,10 @@ impl<'a, H: Handler> Perform for Performer<'a, H> {
                 if params.is_empty() {
                     handler.terminal_attribute(Attr::Reset);
                 } else {
-                    for attr in attrs_from_sgr_parameters(&mut params_iter) {
-                        match attr {
-                            Some(attr) => handler.terminal_attribute(attr),
-                            None => unhandled!(),
-                        }
-                    }
+                    attrs_from_sgr_parameters(&mut params_iter, |attr| match attr {
+                        Some(attr) => handler.terminal_attribute(attr),
+                        None => unhandled!(),
+                    });
                 }
             }
             ('n', []) => handler.device_status(next_param_or(0) as usize),
@@ -476,9 +474,10 @@ impl<'a, H: Handler> Perform for Performer<'a, H> {
 }
 
 #[inline]
-fn attrs_from_sgr_parameters(params: &mut ParamsIter<'_>) -> Vec<Option<Attr>> {
-    let mut attrs = Vec::with_capacity(params.size_hint().0);
-
+fn attrs_from_sgr_parameters<F>(params: &mut ParamsIter<'_>, mut handler: F)
+where
+    F: FnMut(Option<Attr>),
+{
     while let Some(param) = params.next() {
         let attr = match param {
             [0] => Some(Attr::Reset),
@@ -559,10 +558,8 @@ fn attrs_from_sgr_parameters(params: &mut ParamsIter<'_>) -> Vec<Option<Attr>> {
             [107] => Some(Attr::Background(Color::Named(NamedColor::BrightWhite))),
             _ => None,
         };
-        attrs.push(attr);
+        handler(attr);
     }
-
-    attrs
 }
 
 /// Parse a color specifier from list of attributes.

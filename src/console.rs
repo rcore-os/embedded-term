@@ -302,16 +302,24 @@ impl<T: TextBuffer> Handler for ConsoleInner<T> {
     fn clear_screen(&mut self, mode: ClearMode) {
         trace!("Clearing screen: {:?}", mode);
         let bg = self.temp.bg();
+        let row = self.cursor.row;
+        let col = self.cursor.col;
         match mode {
             ClearMode::Above => {
-                for i in 0..self.cursor.row {
+                for i in 0..row {
                     for j in 0..self.buf.width() {
                         self.buf.write(i, j, bg);
                     }
                 }
+                for j in 0..col {
+                    self.buf.write(row, j, bg);
+                }
             }
             ClearMode::Below => {
-                for i in self.cursor.row..self.buf.height() {
+                for j in col..self.buf.width() {
+                    self.buf.write(row, j, bg);
+                }
+                for i in row + 1..self.buf.height() {
                     for j in 0..self.buf.width() {
                         self.buf.write(i, j, bg);
                     }
