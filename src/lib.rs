@@ -23,12 +23,6 @@ extern crate log;
 mod log;
 
 pub use console::*;
-pub use embedded_graphics::{
-    self,
-    pixelcolor::Rgb888,
-    prelude::{Pixel, Size},
-    DrawTarget,
-};
 pub use graphic::TextOnGraphic;
 pub use text_buffer::TextBuffer;
 pub use text_buffer_cache::TextBufferCache;

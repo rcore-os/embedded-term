@@ -6,19 +6,20 @@ authors = [
     "equation314 <equation618@gmail.com>",
     "Jiajie Chen <jiegec@qq.com>"
 ]
-edition = "2018"
+edition = "2021"
 description = "The virtual console embedded in rCore kernel: receive text input and print to a framebuffer."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-embedded-graphics = "0.6"
-vte = "0.7"
+embedded-graphics = "0.7"
+vte = "0.10"
 log = { version = "0.4", default-features = false, optional = true }
 
 [dev-dependencies]
-embedded-graphics-simulator = "0.2"
-env_logger = "0.7"
+embedded-graphics-core = "0.3"
+embedded-graphics-simulator = "0.3"
+env_logger = "0.9"
 pty = "0.2"
 mio = "0.6"
 termios = "0.3"

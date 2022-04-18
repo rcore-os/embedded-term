@@ -4,6 +4,8 @@
 
 #![allow(dead_code)]
 
+use vte::Params;
+
 use super::color::ConsoleColor;
 use super::color::Rgb888;
 
@@ -39,7 +41,7 @@ impl Default for CharacterAttribute {
 
 impl CharacterAttribute {
     /// Parse and apply SGR (Select Graphic Rendition) parameters.
-    pub fn apply_sgr(&mut self, params: &[i64]) {
+    pub fn apply_sgr(&mut self, params: &[u16]) {
         let code = *params.get(0).unwrap_or(&0) as u8;
         match code {
             0 => *self = CharacterAttribute::default(),
@@ -113,18 +115,18 @@ impl CharacterAttribute {
 /// Reference: [https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences](https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences)
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CSI<'a> {
-    CursorMove(i64, i64),
-    CursorMoveTo(i64, i64),
-    CursorMoveRow(i64),
-    CursorMoveRowTo(i64),
-    CursorMoveColTo(i64),
-    SGR(&'a [i64]),
+    CursorMove(i16, i16),
+    CursorMoveTo(i16, i16),
+    CursorMoveRow(i16),
+    CursorMoveRowTo(i16),
+    CursorMoveColTo(i16),
+    Sgr(&'a [u16]),
     EnableAltScreenBuffer,
     DisableAltScreenBuffer,
     EnableAutoWrap,
     DisableAutoWrap,
-    SetScrollingRegion(i64, i64),
-    WindowManipulation(&'a [i64]),
+    SetScrollingRegion(i16, i16),
+    WindowManipulation(&'a [u16]),
     HideCursor,
     ShowCursor,
     EraseDisplayBelow,
@@ -143,8 +145,9 @@ pub enum CSI<'a> {
 }
 
 impl<'a> CSI<'a> {
-    pub fn new(final_byte: u8, params: &'a [i64], _intermediates: &'a [u8]) -> CSI<'a> {
-        let n = *params.get(0).unwrap_or(&1);
+    pub fn new(final_byte: u8, params: &'a Params, _intermediates: &'a [u8]) -> CSI<'a> {
+        let params = params.iter().next().unwrap();
+        let n = *params.get(0).unwrap_or(&1) as i16;
         match final_byte {
             b'A' => CSI::CursorMove(-n, 0),
             b'B' => CSI::CursorMove(n, 0),
@@ -153,8 +156,8 @@ impl<'a> CSI<'a> {
             b'E' => CSI::CursorMoveRow(n),
             b'F' => CSI::CursorMoveRow(-n),
             b'H' => CSI::CursorMoveTo(
-                *params.get(0).unwrap_or(&1) - 1,
-                *params.get(1).unwrap_or(&1) - 1,
+                *params.get(0).unwrap_or(&1) as i16 - 1,
+                *params.get(1).unwrap_or(&1) as i16 - 1,
             ),
             b'J' => match *params.get(1).unwrap_or(&0) {
                 0 => CSI::EraseDisplayBelow,
@@ -168,8 +171,8 @@ impl<'a> CSI<'a> {
                 2 => CSI::EraseLineAll,
                 _ => CSI::Unknown,
             },
-            b'G' => CSI::CursorMoveColTo(*params.get(1).unwrap_or(&1) - 1),
-            b'm' => CSI::SGR(params),
+            b'G' => CSI::CursorMoveColTo(*params.get(1).unwrap_or(&1) as i16 - 1),
+            b'm' => CSI::Sgr(params),
             b'n' => match *params.get(0).unwrap_or(&0) {
                 5 => CSI::DeviceStatusReport,
                 6 => CSI::ReportCursorPosition,
@@ -193,8 +196,8 @@ impl<'a> CSI<'a> {
                 _ => CSI::Unknown,
             },
             b'r' => CSI::SetScrollingRegion(
-                *params.get(0).unwrap_or(&1) - 1,
-                *params.get(1).unwrap_or(&1) - 1,
+                *params.get(0).unwrap_or(&1) as i16 - 1,
+                *params.get(1).unwrap_or(&1) as i16 - 1,
             ),
             b't' => CSI::WindowManipulation(params),
             _ => CSI::Unknown,

@@ -1,7 +1,8 @@
+use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*, primitives::Rectangle};
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
-use rcore_console::{Console, DrawTarget, Pixel, Rgb888, Size};
+use rcore_console::Console;
 
 use std::convert::Infallible;
 use std::io::Read;
@@ -37,14 +38,20 @@ fn main() {
 
 struct DisplayWrapper(Arc<Mutex<SimulatorDisplay<Rgb888>>>);
 
-impl DrawTarget<Rgb888> for DisplayWrapper {
+impl Dimensions for DisplayWrapper {
+    fn bounding_box(&self) -> Rectangle {
+        self.0.lock().unwrap().bounding_box()
+    }
+}
+
+impl DrawTarget for DisplayWrapper {
+    type Color = Rgb888;
     type Error = Infallible;
 
-    fn draw_pixel(&mut self, item: Pixel<Rgb888>) -> Result<(), Self::Error> {
-        self.0.lock().unwrap().draw_pixel(item)
-    }
-
-    fn size(&self) -> Size {
-        self.0.lock().unwrap().size()
+    fn draw_iter<I>(&mut self, pixels: I) -> core::result::Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        self.0.lock().unwrap().draw_iter(pixels)
     }
 }

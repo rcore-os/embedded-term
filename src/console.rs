@@ -7,7 +7,7 @@ use alloc::string::ToString;
 use alloc::vec::Vec;
 use core::fmt;
 use embedded_graphics::prelude::DrawTarget;
-use vte::{Parser, Perform};
+use vte::{Params, Parser, Perform};
 
 /// Console
 ///
@@ -37,7 +37,7 @@ struct ConsoleInner<T: TextBuffer> {
 /// Console on top of a frame buffer
 pub type ConsoleOnGraphic<D> = Console<TextBufferCache<TextOnGraphic<D>>>;
 
-impl<D: DrawTarget<Rgb888>> Console<TextBufferCache<TextOnGraphic<D>>> {
+impl<D: DrawTarget<Color = Rgb888>> Console<TextBufferCache<TextOnGraphic<D>>> {
     /// Create a console on top of a frame buffer
     pub fn on_frame_buffer(buffer: D) -> Self {
         Self::on_cached_text_buffer(TextOnGraphic::new(buffer))
@@ -157,7 +157,7 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
         }
     }
 
-    fn hook(&mut self, params: &[i64], intermediates: &[u8], ignore: bool, action: char) {
+    fn hook(&mut self, params: &Params, intermediates: &[u8], ignore: bool, action: char) {
         debug!(
             "hook: {:?}, {:?}, {}, {:?}",
             params, intermediates, ignore, action
@@ -181,7 +181,7 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
 
     fn csi_dispatch(
         &mut self,
-        params: &[i64],
+        params: &Params,
         intermediates: &[u8],
         ignore: bool,
         final_byte: char,
@@ -193,17 +193,17 @@ impl<T: TextBuffer> Perform for ConsoleInner<T> {
             params, intermediates, ignore, final_byte, parsed
         );
         match parsed {
-            CSI::SGR(code) => self.attribute.apply_sgr(code),
+            CSI::Sgr(code) => self.attribute.apply_sgr(code),
             CSI::CursorMove(dr, dc) => {
-                self.row = (self.row as i64 + dr) as usize;
-                self.col = (self.col as i64 + dc) as usize;
+                self.row = (self.row as i64 + dr as i64) as usize;
+                self.col = (self.col as i64 + dc as i64) as usize;
             }
             CSI::CursorMoveTo(dr, dc) => {
                 self.row = dr as usize;
                 self.col = dc as usize;
             }
             CSI::CursorMoveRow(dr) => {
-                self.row = (self.row as i64 + dr) as usize;
+                self.row = (self.row as i64 + dr as i64) as usize;
                 self.col = 0;
             }
             CSI::CursorMoveRowTo(dr) => {

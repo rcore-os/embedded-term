@@ -1,17 +1,21 @@
 use crate::text_buffer::*;
 use embedded_graphics::{
-    egline, egtext, fonts::Font8x16, pixelcolor::Rgb888, prelude::*, primitive_style, text_style,
+    mono_font::{ascii::FONT_8X13, MonoTextStyleBuilder},
+    pixelcolor::Rgb888,
+    prelude::*,
+    primitives::{Line, PrimitiveStyleBuilder},
+    text::Text,
 };
 
 /// A [`TextBuffer`] on top of a frame buffer
 ///
 /// The internal use [`embedded_graphics`] crate to render fonts to pixels.
 ///
-/// The underlying frame buffer needs to implement `DrawTarget<Rgb888>` trait
+/// The underlying frame buffer needs to implement [`DrawTarget`] trait
 /// to draw pixels in RGB format.
 pub struct TextOnGraphic<D>
 where
-    D: DrawTarget<Rgb888>,
+    D: DrawTarget,
 {
     width: u32,
     height: u32,
@@ -20,13 +24,13 @@ where
 
 impl<D> TextOnGraphic<D>
 where
-    D: DrawTarget<Rgb888>,
+    D: DrawTarget,
 {
     /// Create a new text buffer on graphic.
     pub fn new(graphic: D) -> Self {
         TextOnGraphic {
-            width: graphic.size().width,
-            height: graphic.size().height,
+            width: graphic.bounding_box().size.width,
+            height: graphic.bounding_box().size.height,
             graphic,
         }
     }
@@ -34,7 +38,7 @@ where
 
 impl<D> TextBuffer for TextOnGraphic<D>
 where
-    D: DrawTarget<Rgb888>,
+    D: DrawTarget<Color = Rgb888>,
 {
     fn width(&self) -> usize {
         self.width as usize / 8
@@ -53,27 +57,28 @@ where
         } else {
             (ch.attr.foreground, ch.attr.background)
         };
-        let style = text_style!(
-            font = Font8x16,
-            text_color = foreground,
-            background_color = background,
-        );
+        let style = MonoTextStyleBuilder::new()
+            .font(&FONT_8X13)
+            .text_color(foreground)
+            .background_color(background)
+            .build();
         let (x, y) = (col as i32 * 8, row as i32 * 16);
-        let text = egtext!(text = s, top_left = (x, y), style = style);
-        let _ = text.draw(&mut self.graphic);
+        let _ = Text::new(s, Point::new(x, y), style).draw(&mut self.graphic);
 
-        let style = primitive_style!(
-            stroke_color = foreground,
-            fill_color = background,
-            stroke_width = if ch.attr.bold { 5 } else { 1 },
-        );
+        let style = PrimitiveStyleBuilder::new()
+            .stroke_color(foreground)
+            .stroke_width(if ch.attr.bold { 5 } else { 1 })
+            .fill_color(background)
+            .build();
         if ch.attr.strikethrough {
-            let line = egline!(start = (x, y + 8), end = (x + 8, y + 8), style = style);
-            let _ = line.draw(&mut self.graphic);
+            let _ = Line::new(Point::new(x, y + 8), Point::new(x + 8, y + 8))
+                .into_styled(style)
+                .draw(&mut self.graphic);
         }
         if ch.attr.underline {
-            let line = egline!(start = (x, y + 15), end = (x + 8, y + 15), style = style);
-            let _ = line.draw(&mut self.graphic);
+            let _ = Line::new(Point::new(x, y + 15), Point::new(x + 8, y + 15))
+                .into_styled(style)
+                .draw(&mut self.graphic);
         }
     }
 }
