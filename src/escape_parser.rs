@@ -9,20 +9,23 @@ use vte::Params;
 use super::color::ConsoleColor;
 use super::color::Rgb888;
 
+/// Display attribute of characters.
+///
+/// The default attribute is white text on a black background.
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(align(4))]
 pub struct CharacterAttribute {
-    /// foreground color
+    /// Foreground color.
     pub foreground: Rgb888,
-    /// background color
+    /// Background color.
     pub background: Rgb888,
-    /// show underline
+    /// Show underline.
     pub underline: bool,
-    /// swap foreground and background colors
+    /// Swap foreground and background colors.
     pub reverse: bool,
-    /// text marked for deletion
+    /// Text marked for deletion.
     pub strikethrough: bool,
-    /// bold font
+    /// Bold font.
     pub bold: bool,
 }
 
@@ -41,7 +44,7 @@ impl Default for CharacterAttribute {
 
 impl CharacterAttribute {
     /// Parse and apply SGR (Select Graphic Rendition) parameters.
-    pub fn apply_sgr(&mut self, params: &[u16]) {
+    pub(crate) fn apply_sgr(&mut self, params: &[u16]) {
         let code = *params.get(0).unwrap_or(&0) as u8;
         match code {
             0 => *self = CharacterAttribute::default(),

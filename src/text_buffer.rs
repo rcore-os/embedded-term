@@ -4,7 +4,9 @@ use crate::escape_parser::CharacterAttribute;
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(align(4))]
 pub struct ConsoleChar {
+    /// The character.
     pub char: char,
+    /// The character attribute.
     pub attr: CharacterAttribute,
 }
 
