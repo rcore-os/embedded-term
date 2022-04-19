@@ -1,13 +1,18 @@
 [package]
-name = "rcore-console"
+name = "embedded-term"
 version = "0.1.0"
 authors = [
     "Runji Wang <wangrunji0408@163.com>",
     "Yuekai Jia <equation618@gmail.com>",
     "Jiajie Chen <jiegec@qq.com>"
 ]
-edition = "2018"
-description = "The virtual console embedded in rCore kernel: receive text input and print to a framebuffer."
+edition = "2021"
+description = "Terminal emulator on embedded-graphics."
+keywords = ["terminal", "no-std"]
+categories = ["embedded", "gui", "no-std"]
+homepage = "https://github.com/rcore-os/embedded-term"
+repository = "https://github.com/rcore-os/embedded-term"
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -20,7 +25,8 @@ lazy_static = "1.4"
 
 [dev-dependencies]
 embedded-graphics-simulator = "0.3"
-env_logger = "0.7"
+embedded-graphics-core = "0.3"
+env_logger = "0.9"
 libc = "0.2"
 pty = "0.2"
 mio = "0.6"

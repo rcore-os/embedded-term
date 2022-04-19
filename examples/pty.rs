@@ -2,15 +2,15 @@ use std::io::{stdin, Read, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd};
 use std::{cell::RefCell, convert::Infallible, fs::File, process::Command, time::Duration};
 
+use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*};
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
+use embedded_term::Console;
 use libc::{self, winsize};
 use mio::{unix::EventedFd, Events, Poll, PollOpt, Ready, Token};
 use pty::fork::Fork;
 use termios::{cfmakeraw, tcsetattr, Termios, TCSANOW};
-
-use rcore_console::{Console, DrawTarget, OriginDimensions, Pixel, Rgb888, Size};
 
 const DISPLAY_SIZE: Size = Size::new(800, 600);
 
