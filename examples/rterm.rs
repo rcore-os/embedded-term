@@ -1,7 +1,8 @@
+use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*};
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
-use rcore_console::{Console, DrawTarget, OriginDimensions, Pixel, Rgb888, Size};
+use embedded_term::Console;
 
 use std::convert::Infallible;
 use std::io::Read;

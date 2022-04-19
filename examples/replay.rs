@@ -2,11 +2,11 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use std::{convert::Infallible, fmt::Write, thread};
 
+use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*};
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
-
-use rcore_console::{Console, DrawTarget, OriginDimensions, Pixel, Rgb888, Size};
+use embedded_term::Console;
 
 const DISPLAY_SIZE: Size = Size::new(1280, 720);
 
