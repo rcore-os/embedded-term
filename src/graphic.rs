@@ -4,7 +4,7 @@ use embedded_graphics::{
     pixelcolor::Rgb888,
     prelude::*,
     primitives::{Line, PrimitiveStyleBuilder},
-    text::Text,
+    text::{Baseline, LineHeight, Text, TextStyleBuilder},
 };
 
 /// A [`TextBuffer`] on top of a frame buffer
@@ -47,7 +47,7 @@ where
         self.height as usize / 16
     }
     fn read(&self, _row: usize, _col: usize) -> ConsoleChar {
-        unimplemented!("reading char from graphic is unsupported")
+        panic!("reading char from graphic is unsupported");
     }
     fn write(&mut self, row: usize, col: usize, ch: ConsoleChar) {
         let mut utf8_buf = [0u8; 8];
@@ -57,13 +57,18 @@ where
         } else {
             (ch.attr.foreground, ch.attr.background)
         };
-        let style = MonoTextStyleBuilder::new()
+        let text_style = TextStyleBuilder::new()
+            .baseline(Baseline::Top)
+            .line_height(LineHeight::Pixels(16))
+            .build();
+        let char_style = MonoTextStyleBuilder::new()
             .font(&FONT_8X13)
             .text_color(foreground)
             .background_color(background)
             .build();
         let (x, y) = (col as i32 * 8, row as i32 * 16);
-        let _ = Text::new(s, Point::new(x, y), style).draw(&mut self.graphic);
+        let _ = Text::with_text_style(s, Point::new(x, y), char_style, text_style)
+            .draw(&mut self.graphic);
 
         let style = PrimitiveStyleBuilder::new()
             .stroke_color(foreground)
