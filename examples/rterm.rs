@@ -2,7 +2,7 @@ use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*, primitives::Rectang
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
-use rcore_console::Console;
+use embedded_term::Console;
 
 use std::convert::Infallible;
 use std::io::Read;
@@ -26,7 +26,7 @@ fn main() {
     });
 
     let output_settings = OutputSettingsBuilder::new().build();
-    let mut window = Window::new("Example", &output_settings);
+    let mut window = Window::new("rterm", &output_settings);
     loop {
         window.update(&display.lock().unwrap());
         if window.events().any(|e| e == SimulatorEvent::Quit) {

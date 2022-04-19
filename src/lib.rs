@@ -3,12 +3,14 @@
 //! The crate is `no_std` compatible. It is suitable for embedded systems and OS kernels.
 //!
 //! The [`Console`] can be built on top of either a [`TextBuffer`] or a frame buffer ([`DrawTarget`]).
+//! For example, the [VGA text mode] has a text buffer, while the graphic mode has a frame buffer.
 //!
 //! It can be tested in SDL2 with the help of [`embedded_graphics_simulator`](https://docs.rs//embedded-graphics/#simulator).
 //! See examples for details.
 //!
 //! [embedded-graphics]: embedded_graphics
 //! [`DrawTarget`]: embedded_graphics::draw_target::DrawTarget
+//! [VGA text mode]: https://en.wikipedia.org/wiki/VGA_text_mode
 
 #![no_std]
 #![deny(unsafe_code)]

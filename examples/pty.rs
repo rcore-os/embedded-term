@@ -2,10 +2,10 @@ use embedded_graphics_core::{pixelcolor::Rgb888, prelude::*, primitives::Rectang
 use embedded_graphics_simulator::{
     OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
 };
+use embedded_term::Console;
 use mio::unix::EventedFd;
 use mio::*;
 use pty::fork::*;
-use rcore_console::Console;
 use std::cell::RefCell;
 use std::convert::Infallible;
 use std::env::args_os;
