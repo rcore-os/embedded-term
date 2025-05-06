@@ -310,7 +310,7 @@ impl<'a, H: Handler> Performer<'a, H> {
 }
 
 /// Perform actions
-impl<'a, H: Handler> Perform for Performer<'a, H> {
+impl<H: Handler> Perform for Performer<'_, H> {
     #[inline]
     fn print(&mut self, c: char) {
         self.handler.input(c);
@@ -439,7 +439,7 @@ impl<'a, H: Handler> Perform for Performer<'a, H> {
             ('d', []) => handler.goto_line(next_param_or(1) as usize - 1),
             ('h', intermediates) => {
                 for param in params_iter.map(|param| param[0]) {
-                    match Mode::from_primitive(intermediates.get(0), param) {
+                    match Mode::from_primitive(intermediates.first(), param) {
                         Some(mode) => handler.set_mode(mode),
                         None => unhandled!(),
                     }
@@ -447,7 +447,7 @@ impl<'a, H: Handler> Perform for Performer<'a, H> {
             }
             ('l', intermediates) => {
                 for param in params_iter.map(|param| param[0]) {
-                    match Mode::from_primitive(intermediates.get(0), param) {
+                    match Mode::from_primitive(intermediates.first(), param) {
                         Some(mode) => handler.unset_mode(mode),
                         None => unhandled!(),
                     }
